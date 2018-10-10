@@ -56,7 +56,7 @@ static FS_TYPES fs_type_table[] = {
     {"ufs1", TSK_FS_TYPE_FFS1, "UFS1"},
     {"ufs2", TSK_FS_TYPE_FFS2, "UFS2"},
     {"yaffs2", TSK_FS_TYPE_YAFFS2, "YAFFS2"},
-    //{"xfs", TSK_FS_TYPE_XFS, "XFS"},
+    {"xfs", TSK_FS_TYPE_XFS, "XFS"},
     {0,0,""}
 };
 
@@ -66,6 +66,9 @@ static FS_TYPES fs_legacy_type_table[] = {
     {"linux-ext2", TSK_FS_TYPE_EXT2, "Linux TSK_FS_TYPE_EXT_2"},
     {"linux-ext3", TSK_FS_TYPE_EXT3, "Linux TSK_FS_TYPE_EXT_3"},
     {"linux-ext4", TSK_FS_TYPE_EXT4, "Linux TSK_FS_TYPE_EXT_4"},
+    
+    {"linux-xfs", TSK_FS_TYPE_XFS, "Linux TSK_FS_TYPE_XFS"},
+
     {"bsdi", TSK_FS_TYPE_FFS1, "BSDi FFS"},
     {"freebsd", TSK_FS_TYPE_FFS1, "FreeBSD FFS"},
     {"netbsd", TSK_FS_TYPE_FFS1, "NetBSD FFS"},
