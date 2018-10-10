@@ -797,6 +797,7 @@ extern "C" {
         TSK_FS_TYPE_EXT4 = 0x00002000,  ///< Ext4 file system
         TSK_FS_TYPE_YAFFS2 = 0x00004000,        ///< YAFFS2 file system
         TSK_FS_TYPE_YAFFS2_DETECT = 0x00004000, ///< YAFFS2 auto detection
+        //TSK_FS_TYPE_XFS = 0x00008000
         TSK_FS_TYPE_UNSUPP = 0xffffffff,        ///< Unsupported file system
     };
     /* NOTE: Update bindings/java/src/org/sleuthkit/datamodel/TskData.java
