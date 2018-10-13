@@ -151,6 +151,16 @@ main(int argc, char **argv)
                 sig_offset = 0;
                 bs = 512;
             }
+            else if (strcmp(optarg, "xfs") == 0) {
+                lit_end = 1;
+                sig[0] = 0x58;
+                sig[1] = 0x46;
+                sig[2] = 0x53;
+                sig[3] = 0x42;
+                sig_size = 4;
+                /* Located 0 into image */
+                sig_offset = 0;
+            }
             else {
                 fprintf(stderr, "Invalid template\n");
                 exit(1);
