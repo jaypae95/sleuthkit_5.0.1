@@ -184,3 +184,6 @@ unit_tests/base/test_base
 #Test data folder
 
 tests/data
+
+# vs code folder
+.vscode
