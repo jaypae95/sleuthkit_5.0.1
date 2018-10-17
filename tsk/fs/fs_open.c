@@ -83,6 +83,7 @@ TSK_FS_INFO *
 tsk_fs_open_img(TSK_IMG_INFO * a_img_info, TSK_OFF_T a_offset,
     TSK_FS_TYPE_ENUM a_ftype)
 {
+    printf("tsk_fs_open_img\n");
     TSK_FS_INFO *fs_info;
 
     const struct {

@@ -80,6 +80,7 @@ tsk_img_open(int num_img,
     const TSK_TCHAR * const images[], TSK_IMG_TYPE_ENUM type,
     unsigned int a_ssize)
 {
+    printf("tsk_img_open\n");
     TSK_IMG_INFO *img_info = NULL;
 
     // Get rid of any old error messages laying around

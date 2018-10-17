@@ -40,6 +40,7 @@ static ssize_t
 fs_prepost_read(TSK_FS_INFO * a_fs, TSK_OFF_T a_off, char *a_buf,
     size_t a_len)
 {
+    printf("fs_prepost_read\n");
     TSK_OFF_T cur_off = a_off;
     TSK_OFF_T end_off = a_off + a_len;
     ssize_t cur_idx = 0;
@@ -88,6 +89,7 @@ fs_prepost_read(TSK_FS_INFO * a_fs, TSK_OFF_T a_off, char *a_buf,
 ssize_t
 tsk_fs_read(TSK_FS_INFO * a_fs, TSK_OFF_T a_off, char *a_buf, size_t a_len)
 {
+    printf("tsk_fs_read\n");
     // do a sanity check on the read bounds, but only if the block
     // value has been set. 
     // note that this could prevent us from viewing the FS slack...
