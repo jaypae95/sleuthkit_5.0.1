@@ -117,7 +117,8 @@ am_libtskfs_la_OBJECTS = fs_inode.lo fs_io.lo fs_block.lo fs_open.lo \
 	hfs_journal.lo hfs_unicompare.lo lzvn.lo dcalc_lib.lo \
 	dcat_lib.lo dls_lib.lo dstat_lib.lo ffind_lib.lo fls_lib.lo \
 	icat_lib.lo ifind_lib.lo ils_lib.lo usn_journal.lo \
-	usnjls_lib.lo walk_cpp.lo yaffs.lo
+	usnjls_lib.lo walk_cpp.lo yaffs.lo \
+	xfs.lo
 libtskfs_la_OBJECTS = $(am_libtskfs_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -361,7 +362,8 @@ libtskfs_la_SOURCES = tsk_fs_i.h fs_inode.c fs_io.c fs_block.c fs_open.c \
     hfs.c hfs_dent.c hfs_journal.c hfs_unicompare.c lzvn.c lzvn.h \
     dcalc_lib.c dcat_lib.c dls_lib.c dstat_lib.c ffind_lib.c \
     fls_lib.c icat_lib.c ifind_lib.c ils_lib.c usn_journal.c usnjls_lib.c \
-    walk_cpp.cpp yaffs.cpp
+    walk_cpp.cpp yaffs.cpp \
+		xfs.c
 
 all: all-am
 
