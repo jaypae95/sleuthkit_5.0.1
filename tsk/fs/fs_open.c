@@ -100,7 +100,7 @@ tsk_fs_open_img(TSK_IMG_INFO * a_img_info, TSK_OFF_T a_offset,
         { "HFS",      hfs_open,     TSK_FS_TYPE_HFS_DETECT     },
 #endif
         { "ISO9660",  iso9660_open, TSK_FS_TYPE_ISO9660_DETECT },
-        { "XFS",      xfs_open,     TSK_FS_TYPE_HFS_DETECT     }
+        { "XFS",      xfs_open,     TSK_FS_TYPE_XFS_DETECT     }
     };
 
     if (a_img_info == NULL) {

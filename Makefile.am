@@ -82,7 +82,8 @@ nobase_include_HEADERS = tsk/libtsk.h tsk/tsk_incs.h \
     tsk/fs/tsk_ntfs.h tsk/fs/tsk_iso9660.h tsk/fs/tsk_hfs.h tsk/fs/tsk_yaffs.h \
     tsk/fs/tsk_exfatfs.h tsk/fs/tsk_fatxxfs.h \
     tsk/hashdb/tsk_hashdb.h tsk/auto/tsk_auto.h \
-    tsk/auto/tsk_is_image_supported.h
+    tsk/auto/tsk_is_image_supported.h \
+    tsk/fs/tsk_xfs.h
 
 nobase_dist_data_DATA = tsk/sorter/default.sort tsk/sorter/freebsd.sort \
     tsk/sorter/images.sort tsk/sorter/linux.sort tsk/sorter/openbsd.sort \
