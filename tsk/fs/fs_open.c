@@ -99,7 +99,8 @@ tsk_fs_open_img(TSK_IMG_INFO * a_img_info, TSK_OFF_T a_offset,
 #if TSK_USE_HFS
         { "HFS",      hfs_open,     TSK_FS_TYPE_HFS_DETECT     },
 #endif
-        { "ISO9660",  iso9660_open, TSK_FS_TYPE_ISO9660_DETECT }
+        { "ISO9660",  iso9660_open, TSK_FS_TYPE_ISO9660_DETECT },
+        { "XFS",      xfs_open,     TSK_FS_TYPE_HFS_DETECT     }
     };
 
     if (a_img_info == NULL) {
@@ -170,6 +171,9 @@ tsk_fs_open_img(TSK_IMG_INFO * a_img_info, TSK_OFF_T a_offset,
     }
     else if (TSK_FS_TYPE_ISHFS(a_ftype)) {
         return hfs_open(a_img_info, a_offset, a_ftype, 0);
+    }
+    else if (TSK_FS_TYPE_ISHFS(a_ftype)) {
+        return xfs_open(a_img_info, a_offset, a_ftype, 0);
     }
     else if (TSK_FS_TYPE_ISISO9660(a_ftype)) {
         return iso9660_open(a_img_info, a_offset, a_ftype, 0);

@@ -798,6 +798,8 @@ extern "C" {
         TSK_FS_TYPE_YAFFS2 = 0x00004000,        ///< YAFFS2 file system
         TSK_FS_TYPE_YAFFS2_DETECT = 0x00004000, ///< YAFFS2 auto detection
         TSK_FS_TYPE_UNSUPP = 0xffffffff,        ///< Unsupported file system
+        TSK_FS_TYPE_XFS = 0x00008000,   ///< HFS file system
+        TSK_FS_TYPE_XFS_DETECT = 0x00008000,    ///< HFS auto detection
     };
     /* NOTE: Update bindings/java/src/org/sleuthkit/datamodel/TskData.java
      * with any changes. */
@@ -844,6 +846,13 @@ extern "C" {
     * is for a HFS file system. */
 #define TSK_FS_TYPE_ISHFS(ftype) \
     (((ftype) & TSK_FS_TYPE_HFS_DETECT)?1:0)
+
+    /**
+    * \ingroup fslib
+    * Macro that takes a file system type and returns 1 if the type
+    * is for a XFS file system. */
+#define TSK_FS_TYPE_ISXFS(ftype) \
+    (((ftype) & TSK_FS_TYPE_XFS_DETECT)?1:0)
 
     /**
     * \ingroup fslib
