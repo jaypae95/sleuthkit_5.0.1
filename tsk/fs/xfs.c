@@ -15,7 +15,7 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     // clean up any error messages that are lying around
     tsk_error_reset();
 
-    if (TSK_FS_TYPE_ISEXT(ftype) == 0) {
+    if (TSK_FS_TYPE_ISXFS(ftype) == 0) {
         tsk_error_reset();
         tsk_error_set_errno(TSK_ERR_FS_ARG);
         tsk_error_set_errstr("Invalid FS Type in xfs_open");
