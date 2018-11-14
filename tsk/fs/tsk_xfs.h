@@ -2,10 +2,13 @@
 #define _TSK_XFS_H
 
 #include <stdint.h>
+#include <tsk_fs.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define XFS_SBOFF 0x0
 
     typedef struct {
         uint8_t sb_magicnum[4];     /* u32 magic_number */
@@ -53,6 +56,37 @@ extern "C" {
         uint8_t sb_logsunit[4];
         uint8_t sb_features2[4];
     } xfs_sb;
+
+    /*
+     * Structure of an ext2fs file system handle.
+     */
+    typedef struct {
+        TSK_FS_INFO fs_info;    /* super class */
+        xfs_sb *fs;          /* super block */
+
+        /* lock protects grp_buf, grp_num, bmap_buf, bmap_grp_num, imap_buf, imap_grp_num */
+        tsk_lock_t lock;
+
+        // one of the below will be allocated and populated by ext2fs_group_load depending on the FS type
+//        ext4fs_gd *ext4_grp_buf; /* cached group descriptor for 64-bit ext4 r/w shared - lock */
+//        ext2fs_gd *grp_buf;     /* cached group descriptor for ext2,ext3,32-bit ext4 r/w shared - lock */
+//
+//        EXT2_GRPNUM_T grp_num;  /* cached group number r/w shared - lock */
+//
+//        uint8_t *bmap_buf;      /* cached block allocation bitmap r/w shared - lock */
+//        EXT2_GRPNUM_T bmap_grp_num;     /* cached block bitmap nr r/w shared - lock */
+//
+//        uint8_t *imap_buf;      /* cached inode allocation bitmap r/w shared - lock */
+//        EXT2_GRPNUM_T imap_grp_num;     /* cached inode bitmap nr r/w shared - lock */
+//
+//        TSK_OFF_T groups_offset;        /* offset to first group desc */
+//        EXT2_GRPNUM_T groups_count;     /* nr of descriptor group blocks */
+//        uint8_t deentry_type;   /* v1 or v2 of dentry */
+//        uint16_t inode_size;    /* size of each inode */
+//        TSK_DADDR_T first_data_block;
+//
+//        EXT2FS_JINFO *jinfo;
+    } XFS_INFO;
 
 #ifdef __cplusplus
 }
