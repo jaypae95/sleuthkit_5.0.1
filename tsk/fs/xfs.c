@@ -63,5 +63,22 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
         return NULL;
     }
 
+    /*
+     * Verify we are looking at an XFS image
+     */
+    // magic num을 확인하고 big endian인지 little endian인지 정한다.
+    if (tsk_fs_guessu32(fs, xfs->fs->sb_magicnum, XFS_FS_MAGIC)) {
+        fs->tag = 0;
+        free(xfs->fs);
+        tsk_fs_free((TSK_FS_INFO *)xfs);
+        tsk_error_reset();
+        tsk_error_set_errno(TSK_ERR_FS_MAGIC);
+        tsk_error_set_errstr("not an XFS file system (magic)");
+        if (tsk_verbose)
+            fprintf(stderr, "xfs_open: invalid magic\n");
+        return NULL;
+    }
+
+    
     return (fs);
 }
