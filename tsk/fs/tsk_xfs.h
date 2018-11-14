@@ -82,7 +82,7 @@ extern "C" {
 //        TSK_OFF_T groups_offset;        /* offset to first group desc */
 //        EXT2_GRPNUM_T groups_count;     /* nr of descriptor group blocks */
 //        uint8_t deentry_type;   /* v1 or v2 of dentry */
-//        uint16_t inode_size;    /* size of each inode */
+        uint16_t inode_size;    /* size of each inode */
 //        TSK_DADDR_T first_data_block;
 //
 //        EXT2FS_JINFO *jinfo;
