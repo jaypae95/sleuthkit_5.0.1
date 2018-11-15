@@ -43,7 +43,7 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     /*
      * Read the superblock.
      */
-    len = sizeof(xfs);
+    len = sizeof(xfs_sb);
     if ((xfs->fs = (xfs_sb *) tsk_malloc(len)) == NULL) {
         fs->tag = 0;
         tsk_fs_free((TSK_FS_INFO *)xfs);
@@ -78,7 +78,6 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
             fprintf(stderr, "xfs_open: invalid magic\n");
         return NULL;
     }
-
     
     return (fs);
 }
