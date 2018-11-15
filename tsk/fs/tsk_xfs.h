@@ -8,8 +8,12 @@
 extern "C" {
 #endif
 
-#define XFS_SBOFF 0x0
+#define XFS_FIRSTINO    0x1
+#define XFS_ROOTINO     0x2
+#define XFS_SBOFF       0x0
 #define XFS_FS_MAGIC    0x58465342
+
+
     typedef struct {
         uint8_t sb_magicnum[4];     /* u32 magic_number */
         uint8_t sb_blocksize[4];     /* u32 block size */

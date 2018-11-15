@@ -78,6 +78,27 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
             fprintf(stderr, "xfs_open: invalid magic\n");
         return NULL;
     }
+
+    /*
+     * Calculate the meta data info
+     */
+    fs->inum_count = tsk_getu32(fs->endian, xfs->fs->sb_icount) + 1;    // we are adding 1 in this calc to account for Orphans directory
+    fs->last_inum = fs->inum_count;
+    fs->first_inum = XFS_FIRSTINO;
+    fs->root_inum = XFS_ROOTINO;
+
+    // 이거는 inode 개수로 xfs인지 확인하는 건데 inode개수가 최소 몇개인지 모르겠다.
+    if (fs->inum_count < 10) {
+        fs->tag = 0;
+        free(xfs->fs);
+        tsk_fs_free((TSK_FS_INFO *)xfs);
+        tsk_error_reset();
+        tsk_error_set_errno(TSK_ERR_FS_MAGIC);
+        tsk_error_set_errstr("Not an XFS file system (inum count)");
+        if (tsk_verbose)
+            fprintf(stderr, "xfs_open: two few inodes\n");
+        return NULL;
+    }
     
     return (fs);
 }
