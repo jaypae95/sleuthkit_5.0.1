@@ -82,7 +82,7 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     /*
      * Calculate the meta data info
      */
-    fs->inum_count = tsk_getu32(fs->endian, xfs->fs->sb_icount) + 1;    // we are adding 1 in this calc to account for Orphans directory
+    fs->inum_count = tsk_getu64(fs->endian, xfs->fs->sb_icount) + 1;    // we are adding 1 in this calc to account for Orphans directory
     fs->last_inum = fs->inum_count;
     fs->first_inum = XFS_FIRSTINO;
     fs->root_inum = XFS_ROOTINO;
