@@ -22,6 +22,7 @@ extern "C" {
         uint8_t sb_rbmino[8];     /* u32 */
         uint8_t sb_rsumino[8];     /* u32 */
         uint8_t sb_rextsize[8];     /* u32 */
+        uint8_t sb_agblocks[4];
         uint8_t sb_agcount[4];
         uint8_t sb_rbmblocks[4];
         uint8_t sb_logblocks[4];
