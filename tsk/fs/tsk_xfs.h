@@ -74,10 +74,10 @@ extern "C" {
 //
 //        EXT2_GRPNUM_T grp_num;  /* cached group number r/w shared - lock */
 //
-//        uint8_t *bmap_buf;      /* cached block allocation bitmap r/w shared - lock */
+        uint8_t *bmap_buf;      /* cached block allocation bitmap r/w shared - lock */
 //        EXT2_GRPNUM_T bmap_grp_num;     /* cached block bitmap nr r/w shared - lock */
 //
-//        uint8_t *imap_buf;      /* cached inode allocation bitmap r/w shared - lock */
+        uint8_t *imap_buf;      /* cached inode allocation bitmap r/w shared - lock */
 //        EXT2_GRPNUM_T imap_grp_num;     /* cached inode bitmap nr r/w shared - lock */
 //
 //        TSK_OFF_T groups_offset;        /* offset to first group desc */
