@@ -61,7 +61,7 @@ extern "C" {
         uint8_t sb_sectsize[2];
         uint8_t sb_inodesize[2];
         uint8_t sb_inopblock[2];
-        char    sb_fname[12];
+        char    sb_fname[8];
         uint8_t sb_blocklog;
         uint8_t sb_sectlog;
         uint8_t sb_inodelog;
