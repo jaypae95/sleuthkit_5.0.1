@@ -1,30 +1,86 @@
 #include "tsk_fs_i.h"
 #include "tsk_xfs.h"
 
+/* xfs_inode_walk - inode iterator
+ *
+ * flags used: TSK_FS_META_FLAG_USED, TSK_FS_META_FLAG_UNUSED,
+ *  TSK_FS_META_FLAG_ALLOC, TSK_FS_META_FLAG_UNALLOC, TSK_FS_META_FLAG_ORPHAN
+ *
+ *  Return 1 on error and 0 on success
+*/
+
+uint8_t
+xfs_inode_walk(TSK_FS_INFO * fs, TSK_INUM_T start_inum,
+    TSK_INUM_T end_inum, TSK_FS_META_FLAG_ENUM flags,
+    TSK_FS_META_WALK_CB a_action, void *a_ptr)
+{
+    char *myname = "xfs_inode_walk";
+    XFS_INFO *xfs = (XFS_INFO *) fs;
+    TSK_INUM_T inum;
+    TSK_INUM_T end_inum_tmp;
+    TSK_INUM_T ibase = 0;
+    TSK_FS_FILE *fs_file;
+    unsigned int myflags;
+    xfs_dinode_core *dino_buf = NULL;
+    unsigned int size = 0;
+
+    // clean up any error messages that are lying around
+    tsk_error_reset();
+
+
+
+
+    /*
+     * Cleanup.
+     */
+    tsk_fs_file_close(fs_file);
+    free(dino_buf);
+
+    return 0;
+}
+
+/* ext2fs_block_walk - block iterator
+ *
+ * flags: TSK_FS_BLOCK_FLAG_ALLOC, TSK_FS_BLOCK_FLAG_UNALLOC, TSK_FS_BLOCK_FLAG_CONT,
+ *  TSK_FS_BLOCK_FLAG_META
+ *
+ *  Return 1 on error and 0 on success
+*/
+
+uint8_t
+xfs_block_walk(TSK_FS_INFO * a_fs, TSK_DADDR_T a_start_blk,
+    TSK_DADDR_T a_end_blk, TSK_FS_BLOCK_WALK_FLAG_ENUM a_flags,
+    TSK_FS_BLOCK_WALK_CB a_action, void *a_ptr)
+{
+    char *myname = "xfs_block_walk";
+    TSK_FS_BLOCK *fs_block;
+    TSK_DADDR_T addr;
+
+    // clean up any error messages that are lying around
+    tsk_error_reset();
+
+
+
+
+
+    /*
+     * Cleanup.
+     */
+    tsk_fs_block_free(fs_block);
+    return 0;
+}
+
 static void
 xfs_close(TSK_FS_INFO * fs)
 {
     XFS_INFO *xfs = (XFS_INFO *) fs;
 
-    if (fs == NULL)
-        return;
-
-#if TSK_USE_SID
-    free(ntfs->sii_data.buffer);
-    ntfs->sii_data.buffer = NULL;
-
-    free(ntfs->sds_data.buffer);
-    ntfs->sds_data.buffer = NULL;
-
-#endif
-
     fs->tag = 0;
     free(xfs->fs);
     free(xfs->bmap_buf);
     free(xfs->imap_buf);
-#if TSK_USE_SID
-    tsk_deinit_lock(&ntfs->sid_lock);
-#endif
+
+    tsk_deinit_lock(&xfs->lock);
 
     tsk_fs_free(fs);
 }
@@ -68,9 +124,6 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     fs->offset = offset;
     fs->tag = TSK_FS_INFO_TAG;
 
-    fs->close = xfs_close;
-    xfs->bmap_buf = NULL;
-    xfs->imap_buf = NULL;
     /*
      * Read the superblock.
      */
@@ -174,6 +227,53 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     for (fs->fs_id_used = 0; fs->fs_id_used < 16; fs->fs_id_used++) {
         fs->fs_id[fs->fs_id_used] = xfs->fs->sb_uuid[fs->fs_id_used];
     }
+
+    /* Set the generic function pointers */
+    fs->inode_walk = xfs_inode_walk;
+    fs->block_walk = xfs_block_walk;
+    fs->block_getflags = NULL;  // TODO
+
+    fs->get_default_attr_type = tsk_fs_unix_get_default_attr_type;
+    //fs->load_attrs = tsk_fs_unix_make_data_run;
+    fs->load_attrs = NULL;  // TODO
+
+    fs->file_add_meta = NULL;  // TODO
+    fs->dir_open_meta = NULL;  // TODO
+    fs->fsstat = NULL;  // TODO
+    fs->fscheck = NULL;  // TODO
+    fs->istat = NULL;  // TODO
+    fs->name_cmp = tsk_fs_unix_name_cmp;
+    fs->close = xfs_close;
+
+
+    // /* Journal */
+    // fs->journ_inum = tsk_getu32(fs->endian, ext2fs->fs->s_journal_inum);
+    // fs->jblk_walk = ext2fs_jblk_walk;
+    // fs->jentry_walk = ext2fs_jentry_walk;
+    // fs->jopen = ext2fs_jopen;
+
+    /* initialize the caches */
+    /* inode map */
+    xfs->imap_buf = NULL;
+    //xfs->imap_grp_num = 0xffffffff;
+
+    /* block map */
+    xfs->bmap_buf = NULL;
+    //xfs->bmap_grp_num = 0xffffffff;
+
+
+    /*
+     * Print some stats.
+     */
+    if (tsk_verbose)
+        tsk_fprintf(stderr,
+            "inodes %" PRIu32 " root ino %" PRIuINUM " blocks %" PRIu32
+            "\n", tsk_getu32(fs->endian,
+                xfs->fs->sb_icount),
+            fs->root_inum, tsk_getu32(fs->endian,
+                xfs->fs->sb_dblocks));
+
+    tsk_init_lock(&xfs->lock);
 
     return (fs);
 }
