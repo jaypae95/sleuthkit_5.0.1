@@ -118,23 +118,23 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     fs->first_inum = XFS_FIRSTINO;
     fs->root_inum = XFS_ROOTINO;
 
-    // 이거는 inode 개수로 xfs인지 확인하는 건데 inode개수가 최소 몇개인지 모르겠다.
-    if (fs->inum_count < 10) {
-        fs->tag = 0;
-        free(xfs->fs);
-        tsk_fs_free((TSK_FS_INFO *)xfs);
-        tsk_error_reset();
-        tsk_error_set_errno(TSK_ERR_FS_MAGIC);
-        tsk_error_set_errstr("Not an XFS file system (inum count)");
-        if (tsk_verbose)
-            fprintf(stderr, "xfs_open: two few inodes\n");
-        return NULL;
-    }
+    // // 이거는 inode 개수로 xfs인지 확인하는 건데 inode개수가 최소 몇개인지 모르겠다.
+    // if (fs->inum_count < 10) {
+    //     fs->tag = 0;
+    //     free(xfs->fs);
+    //     tsk_fs_free((TSK_FS_INFO *)xfs);
+    //     tsk_error_reset();
+    //     tsk_error_set_errno(TSK_ERR_FS_MAGIC);
+    //     tsk_error_set_errstr("Not an XFS file system (inum count)");
+    //     if (tsk_verbose)
+    //         fprintf(stderr, "xfs_open: two few inodes\n");
+    //     return NULL;
+    // }
 
     /* Set the size of the inode, but default to our data structure
      * size if it is larger */
     xfs->inode_size = tsk_getu16(fs->endian, xfs->fs->sb_inodesize);
-    if (xfs->inode_size < sizeof(xfs_inode)) {
+    if (xfs->inode_size < sizeof(xfs_dinode_core)) {
         if (tsk_verbose)
             tsk_fprintf(stderr, "SB inode size is small");
     }
