@@ -1,12 +1,40 @@
 #include "tsk_fs_i.h"
 #include "tsk_xfs.h"
 
+static void
+xfs_close(TSK_FS_INFO * fs)
+{
+    XFS_INFO *xfs = (XFS_INFO *) fs;
+
+    if (fs == NULL)
+        return;
+
+#if TSK_USE_SID
+    free(ntfs->sii_data.buffer);
+    ntfs->sii_data.buffer = NULL;
+
+    free(ntfs->sds_data.buffer);
+    ntfs->sds_data.buffer = NULL;
+
+#endif
+
+    fs->tag = 0;
+    free(xfs->fs);
+    free(xfs->bmap_buf);
+    free(xfs->imap_buf);
+#if TSK_USE_SID
+    tsk_deinit_lock(&ntfs->sid_lock);
+#endif
+
+    tsk_fs_free(fs);
+}
+
 TSK_FS_INFO *
 xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     TSK_FS_TYPE_ENUM ftype, uint8_t test) {
         
     printf("hello tsk I'm mingi\n");
-
+    printf("hi mingi im jaehoon\n");
     XFS_INFO *xfs;
     unsigned int len;
     TSK_FS_INFO *fs;
@@ -34,12 +62,15 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
 
     fs = &(xfs->fs_info);
 
-    fs->ftype = ftype;
+    fs->ftype = TSK_FS_TYPE_XFS;
     fs->flags = 0;
     fs->img_info = img_info;
     fs->offset = offset;
     fs->tag = TSK_FS_INFO_TAG;
 
+    fs->close = xfs_close;
+    xfs->bmap_buf = NULL;
+    xfs->imap_buf = NULL;
     /*
      * Read the superblock.
      */
