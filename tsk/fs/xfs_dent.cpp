@@ -37,13 +37,7 @@ xfs_dir_open_meta(TSK_FS_INFO * a_fs, TSK_FS_DIR ** a_fs_dir,
         tsk_fprintf(stderr,
             "xfs_dir_open_meta: Processing directory %" PRIuINUM
             "\n", a_addr);
-// #ifdef Ext4_DBG
-//         tsk_fprintf(stderr,
-//             "ext2fs_dir_open_meta: $OrphanFiles Inum %" PRIuINUM
-//             " == %" PRIuINUM ": %d\n", TSK_FS_ORPHANDIR_INUM(a_fs), a_addr,
-//             a_addr == TSK_FS_ORPHANDIR_INUM(a_fs));
-// #endif
-//     }
+    }
 
     fs_dir = *a_fs_dir;
     if (fs_dir) {
@@ -137,5 +131,5 @@ xfs_dir_open_meta(TSK_FS_INFO * a_fs, TSK_FS_DIR ** a_fs_dir,
     //     tsk_fs_name_free(fs_name);
     // }
 
-    // return retval_final;
+    return retval_final;
 }

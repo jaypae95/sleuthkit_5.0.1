@@ -118,7 +118,7 @@ am_libtskfs_la_OBJECTS = fs_inode.lo fs_io.lo fs_block.lo fs_open.lo \
 	dcat_lib.lo dls_lib.lo dstat_lib.lo ffind_lib.lo fls_lib.lo \
 	icat_lib.lo ifind_lib.lo ils_lib.lo usn_journal.lo \
 	usnjls_lib.lo walk_cpp.lo yaffs.lo \
-	xfs.lo
+	xfs.lo xfs_dent.lo
 libtskfs_la_OBJECTS = $(am_libtskfs_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)

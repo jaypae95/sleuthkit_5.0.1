@@ -318,7 +318,7 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     fs->load_attrs = NULL;  // TODO
 
     fs->file_add_meta = NULL;  // TODO
-    fs->dir_open_meta = xfs_dir_open_meta;  // TODO
+    fs->dir_open_meta = xfs_dir_open_meta;
     fs->fsstat = xfs_fsstat;  // TODO
     fs->fscheck = NULL;  // TODO
     fs->istat = NULL;  // TODO

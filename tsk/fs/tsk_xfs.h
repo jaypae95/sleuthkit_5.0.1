@@ -122,6 +122,10 @@ extern "C" {
 //        EXT2FS_JINFO *jinfo;
     } XFS_INFO;
 
+    extern TSK_RETVAL_ENUM
+        xfs_dir_open_meta(TSK_FS_INFO * a_fs, TSK_FS_DIR ** a_fs_dir,
+        TSK_INUM_T a_addr);
+
 #ifdef __cplusplus
 }
 #endif
