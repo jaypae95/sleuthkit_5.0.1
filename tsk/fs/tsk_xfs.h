@@ -13,6 +13,33 @@ extern "C" {
 #define XFS_SBOFF       0x0
 #define XFS_FS_MAGIC    0x58465342
 
+    typedef struct xfs_dinode_core {
+        uint8_t           di_magic[2];
+        uint8_t           di_mode[2];
+        uint8_t           di_version;
+        uint8_t           di_format;
+        uint8_t           di_onlink[2];
+        uint8_t           di_uid[4];
+        uint8_t           di_gid[4];
+        uint8_t           di_nlink[4];
+        uint8_t           di_projid[2];
+        uint8_t           di_pad[8];
+        uint8_t           di_flushiter[2];
+        uint8_t           di_atime[4];
+        uint8_t           di_mtime[4];
+        uint8_t           di_ctime[4];
+        uint8_t           di_size[8];
+        uint8_t           di_nblocks[8];
+        uint8_t           di_extsize[4];
+        uint8_t           di_nextents[4];
+        uint8_t           di_anextents[2];
+        uint8_t           di_forkoff;
+        uint8_t           di_aformat;
+        uint8_t           di_dmevmask[4];
+        uint8_t           di_dmstate[2];
+        uint8_t           di_flags[2];
+        uint8_t           di_gen[4];
+    } xfs_dinode_core;
 
     typedef struct {
         uint8_t sb_magicnum[4];     /* u32 magic_number */

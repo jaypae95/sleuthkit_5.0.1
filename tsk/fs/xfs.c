@@ -99,6 +99,14 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
             fprintf(stderr, "xfs_open: two few inodes\n");
         return NULL;
     }
+
+    /* Set the size of the inode, but default to our data structure
+     * size if it is larger */
+    xfs->inode_size = tsk_getu16(fs->endian, xfs->fs->sb_inodesize);
+    if (xfs->inode_size < sizeof(xfs_inode)) {
+        if (tsk_verbose)
+            tsk_fprintf(stderr, "SB inode size is small");
+    }
     
     return (fs);
 }
