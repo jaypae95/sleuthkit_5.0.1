@@ -9,9 +9,11 @@ extern "C" {
 #endif
 
 #define XFS_FIRSTINO    0x1
-#define XFS_ROOTINO     0x2
+#define XFS_ROOTINO     0x1
 #define XFS_SBOFF       0x0
 #define XFS_FS_MAGIC    0x58465342
+#define XFS_MIN_BLOCK_SIZE	512
+#define XFS_MAX_BLOCK_SIZE	65536
 
     typedef struct xfs_dinode_core {
         uint8_t           di_magic[2];
