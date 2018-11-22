@@ -7,7 +7,7 @@ xfs_dir_open_meta(TSK_FS_INFO * a_fs, TSK_FS_DIR ** a_fs_dir,
     TSK_INUM_T a_addr)
 {
     XFS_INFO *xfs = (XFS_INFO *) a_fs;
-    char *dirbuf;
+    //char *dirbuf;
     TSK_OFF_T size;
     TSK_FS_DIR *fs_dir;
     TSK_LIST *list_seen = NULL;
@@ -44,34 +44,18 @@ xfs_dir_open_meta(TSK_FS_INFO * a_fs, TSK_FS_DIR ** a_fs_dir,
         tsk_fs_dir_reset(fs_dir);
         fs_dir->addr = a_addr;
     }
-    else {
-        if ((*a_fs_dir = fs_dir =
+    else if ((*a_fs_dir = fs_dir =
                 tsk_fs_dir_alloc(a_fs, a_addr, 128)) == NULL) {
             return TSK_ERR;
-        }
     }
+    
 
-    //  handle the orphan directory if its contents were requested
-    if (a_addr == TSK_FS_ORPHANDIR_INUM(a_fs)) {
-// #ifdef Ext4_DBG
-//         tsk_fprintf(stderr, "DEBUG: Getting ready to process ORPHANS\n");
-// #endif
-        return tsk_fs_dir_find_orphans(a_fs, fs_dir);
+    if ((fs_dir->fs_file =
+            tsk_fs_file_open_meta(a_fs, NULL, a_addr)) == NULL) {
+        tsk_error_reset();
+        tsk_error_errstr2_concat("- xfs_dir_open_meta");
+        return TSK_ERR;
     }
-//     else {
-// #ifdef Ext4_DBG
-//         tsk_fprintf(stderr,
-//             "DEBUG: not orphan %" PRIuINUM "!=%" PRIuINUM "\n", a_addr,
-//             TSK_FS_ORPHANDIR_INUM(a_fs));
-// #endif
-//     }
-
-    // if ((fs_dir->fs_file =
-    //         tsk_fs_file_open_meta(a_fs, NULL, a_addr)) == NULL) {
-    //     tsk_error_reset();
-    //     tsk_error_errstr2_concat("- xfs_dir_open_meta");
-    //     return TSK_COR;
-    // }
 
     // // We only read in and process a single block at a time
     // if ((dirbuf = tsk_malloc((size_t)a_fs->block_size)) == NULL) {
@@ -94,11 +78,11 @@ xfs_dir_open_meta(TSK_FS_INFO * a_fs, TSK_FS_DIR ** a_fs_dir,
     //         return TSK_COR;
     //     }
 
-    //     retval_tmp =
-    //         ext2fs_dent_parse_block(ext2fs, fs_dir,
-    //         (fs_dir->fs_file->meta->
-    //             flags & TSK_FS_META_FLAG_UNALLOC) ? 1 : 0, &list_seen,
-    //         dirbuf, len);
+    //     // retval_tmp =
+    //     //     ext2fs_dent_parse_block(ext2fs, fs_dir,
+    //     //     (fs_dir->fs_file->meta->
+    //     //         flags & TSK_FS_META_FLAG_UNALLOC) ? 1 : 0, &list_seen,
+    //     //     dirbuf, len);
 
     //     if (retval_tmp == TSK_ERR) {
     //         retval_final = TSK_ERR;
@@ -113,23 +97,18 @@ xfs_dir_open_meta(TSK_FS_INFO * a_fs, TSK_FS_DIR ** a_fs_dir,
     // }
     // free(dirbuf);
 
-    // // if we are listing the root directory, add the Orphan directory entry
-    // if (a_addr == a_fs->root_inum) {
-    //     TSK_FS_NAME *fs_name = tsk_fs_name_alloc(256, 0);
-    //     if (fs_name == NULL)
-    //         return TSK_ERR;
+    // if we are listing the root directory, add the Orphan directory entry
+    if (a_addr == a_fs->root_inum) {
+        TSK_FS_NAME *fs_name = tsk_fs_name_alloc(256, 0);
+        if (fs_name == NULL)
+            return TSK_ERR;
 
-    //     if (tsk_fs_dir_make_orphan_dir_name(a_fs, fs_name)) {
-    //         tsk_fs_name_free(fs_name);
-    //         return TSK_ERR;
-    //     }
-
-    //     if (tsk_fs_dir_add(fs_dir, fs_name)) {
-    //         tsk_fs_name_free(fs_name);
-    //         return TSK_ERR;
-    //     }
-    //     tsk_fs_name_free(fs_name);
-    // }
+        if (tsk_fs_dir_add(fs_dir, fs_name)) {
+            tsk_fs_name_free(fs_name);
+            return TSK_ERR;
+        }
+        tsk_fs_name_free(fs_name);
+    }
 
     return retval_final;
 }

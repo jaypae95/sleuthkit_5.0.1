@@ -14,6 +14,7 @@ extern "C" {
 #define XFS_FS_MAGIC    0x58465342
 #define XFS_MIN_BLOCK_SIZE	512
 #define XFS_MAX_BLOCK_SIZE	65536
+#define EXT2FS_FILE_CONTENT_LEN 
 
     typedef struct xfs_dinode_core {
         uint8_t           di_magic[2];
@@ -91,6 +92,38 @@ extern "C" {
         uint8_t sb_features2[4];
     } xfs_sb;
 
+/*
+ * Bmap root header, on-disk form only.
+ */
+typedef struct xfs_bmdr_block {
+	__be16		bb_level;	/* 0 is a leaf */
+	__be16		bb_numrecs;	/* current # of data records */
+} xfs_bmdr_block_t;
+
+typedef struct xfs_dinode
+{
+	xfs_dinode_core	di_core;
+	/*
+	 * In adding anything between the core and the union, be
+	 * sure to update the macros like XFS_LITINO below and
+	 * XFS_BMAP_RBLOCK_DSIZE in xfs_bmap_btree.h.
+	 */
+	__be32			di_next_unlinked;/* agi unlinked list ptr */
+	union {
+		xfs_bmdr_block_t di_bmbt;	/* btree root block */
+		xfs_bmbt_rec_32_t di_bmx[1];	/* extent list */
+		xfs_dir2_sf_t	di_dir2sf;	/* shortform directory v2 */
+		char		di_c[1];	/* local contents */
+		__be32		di_dev;		/* device for S_IFCHR/S_IFBLK */
+		uuid_t		di_muuid;	/* mount point value */
+		char		di_symlink[1];	/* local symbolic link */
+	}		di_u;
+	union {
+		xfs_bmdr_block_t di_abmbt;	/* btree root block */
+		xfs_bmbt_rec_32_t di_abmx[1];	/* extent list */
+		xfs_attr_shortform_t di_attrsf;	/* shortform attribute list */
+	}		di_a;
+} xfs_dinode;
     /*
      * Structure of an ext2fs file system handle.
      */

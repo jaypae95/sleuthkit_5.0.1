@@ -70,6 +70,69 @@ xfs_block_walk(TSK_FS_INFO * a_fs, TSK_DADDR_T a_start_blk,
     return 0;
 }
 
+/* xfs_inode_lookup - lookup inode, external interface
+ *
+ * @param fs File system to read from.
+ * @param a_fs_file Structure to read into.
+ * @param inum File address to load
+ * @returns 1 on error
+ */
+
+static uint8_t
+xfs_inode_lookup(TSK_FS_INFO * fs, TSK_FS_FILE * a_fs_file,
+    TSK_INUM_T inum)
+{
+    XFS_INFO *xfs = (EXT2FS_INFO *) fs;
+    xfs_dinode_core *dino_core_buf = NULL;
+    unsigned int size = 0;
+
+    if (a_fs_file == NULL) {
+        tsk_error_set_errno(TSK_ERR_FS_ARG);
+        tsk_error_set_errstr("xfs_inode_lookup: fs_file is NULL");
+        return 1;
+    }
+
+    if (a_fs_file->meta == NULL) {
+        a_fs_file->meta = tsk_fs_meta_alloc(HFS_FILE_CONTENT_LEN);
+    }
+
+    if (a_fs_file->meta == NULL) {
+        return 1;
+    }
+    else {
+        tsk_fs_meta_reset(a_fs_file->meta);
+    }
+
+    // see if they are looking for the special "orphans" directory
+    if (inum == TSK_FS_ORPHANDIR_INUM(fs)) {
+        if (tsk_fs_dir_make_orphan_dir_meta(fs, a_fs_file->meta))
+            return 1;
+        else
+            return 0;
+    }
+
+    size =
+        ext2fs->inode_size >
+        sizeof(ext2fs_inode) ? ext2fs->inode_size : sizeof(ext2fs_inode);
+    if ((dino_buf = (ext2fs_inode *) tsk_malloc(size)) == NULL) {
+        return 1;
+    }
+
+    if (ext2fs_dinode_load(ext2fs, inum, dino_buf)) {
+        free(dino_buf);
+        return 1;
+    }
+
+    if (ext2fs_dinode_copy(ext2fs, a_fs_file->meta, inum, dino_buf)) {
+        free(dino_buf);
+        return 1;
+    }
+
+    free(dino_buf);
+    return 0;
+}
+
+
 static void
 xfs_close(TSK_FS_INFO * fs)
 {
@@ -317,7 +380,7 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     //fs->load_attrs = tsk_fs_unix_make_data_run;
     fs->load_attrs = NULL;  // TODO
 
-    fs->file_add_meta = NULL;  // TODO
+    fs->file_add_meta = xfs_inode_lookup;
     fs->dir_open_meta = xfs_dir_open_meta;
     fs->fsstat = xfs_fsstat;  // TODO
     fs->fscheck = NULL;  // TODO
