@@ -96,9 +96,54 @@ extern "C" {
  * Bmap root header, on-disk form only.
  */
 typedef struct xfs_bmdr_block {
-	__be16		bb_level;	/* 0 is a leaf */
-	__be16		bb_numrecs;	/* current # of data records */
+	uint16_t		bb_level;	/* 0 is a leaf */
+	uint16_t		bb_numrecs;	/* current # of data records */
 } xfs_bmdr_block_t;
+
+typedef struct xfs_bmbt_rec_32
+{
+	uint32_t		l0, l1, l2, l3;
+} xfs_bmbt_rec_32_t;
+
+typedef struct { uint8_t i[8]; } xfs_dir2_ino8_t;
+typedef struct { uint8_t i[4]; } xfs_dir2_ino4_t;
+typedef union {
+    xfs_dir2_ino8_t i8;
+    xfs_dir2_ino4_t i4;
+} xfs_dir2_inou_t;
+
+typedef struct xfs_dir2_sf_entry {
+    uint8_t namelen;
+    uint16_t offset;
+    uint8_t name[1];
+    uint8_t ftype;
+    xfs_dir2_inou_t inumber;
+} xfs_dir2_sf_entry_t;
+
+typedef struct xfs_dir2_sf_hdr {
+    uint8_t count;
+    uint8_t i8count;
+    xfs_dir2_inou_t parent;
+} xfs_dir2_sf_hdr_t;
+
+typedef struct xfs_dir2_sf {
+    xfs_dir2_sf_hdr_t hdr;
+    xfs_dir2_sf_entry_t list[1];
+} xfs_dir2_sf_t;
+
+typedef struct xfs_attr_shortform {
+    struct xfs_attr_sf_hdr {
+        uint16_t totsize;
+        uint8_t count;
+    } hdr;
+
+    struct xfs_attr_sf_entry {
+        uint8_t namelen;
+        uint8_t valuelen;
+        uint8_t flags;
+        uint8_t nameval[1];
+    } list[1];
+} xfs_attr_shortform_t;
 
 typedef struct xfs_dinode
 {
@@ -108,21 +153,21 @@ typedef struct xfs_dinode
 	 * sure to update the macros like XFS_LITINO below and
 	 * XFS_BMAP_RBLOCK_DSIZE in xfs_bmap_btree.h.
 	 */
-	__be32			di_next_unlinked;/* agi unlinked list ptr */
+	uint32_t			di_next_unlinked;/* agi unlinked list ptr */
 	union {
 		xfs_bmdr_block_t di_bmbt;	/* btree root block */
 		xfs_bmbt_rec_32_t di_bmx[1];	/* extent list */
 		xfs_dir2_sf_t	di_dir2sf;	/* shortform directory v2 */
 		char		di_c[1];	/* local contents */
-		__be32		di_dev;		/* device for S_IFCHR/S_IFBLK */
+		uint32_t		di_dev;		/* device for S_IFCHR/S_IFBLK */
 		uuid_t		di_muuid;	/* mount point value */
 		char		di_symlink[1];	/* local symbolic link */
-	}		di_u;
+	} di_u;
 	union {
 		xfs_bmdr_block_t di_abmbt;	/* btree root block */
 		xfs_bmbt_rec_32_t di_abmx[1];	/* extent list */
 		xfs_attr_shortform_t di_attrsf;	/* shortform attribute list */
-	}		di_a;
+	} di_a;
 } xfs_dinode;
     /*
      * Structure of an ext2fs file system handle.
