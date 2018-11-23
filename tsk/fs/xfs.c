@@ -82,7 +82,7 @@ static uint8_t
 xfs_inode_lookup(TSK_FS_INFO * fs, TSK_FS_FILE * a_fs_file,
     TSK_INUM_T inum)
 {
-    XFS_INFO *xfs = (EXT2FS_INFO *) fs;
+    XFS_INFO *xfs = (XFS_INFO *) fs;
     xfs_dinode_core *dino_core_buf = NULL;
     unsigned int size = 0;
 
@@ -93,7 +93,7 @@ xfs_inode_lookup(TSK_FS_INFO * fs, TSK_FS_FILE * a_fs_file,
     }
 
     if (a_fs_file->meta == NULL) {
-        a_fs_file->meta = tsk_fs_meta_alloc(HFS_FILE_CONTENT_LEN);
+        a_fs_file->meta = tsk_fs_meta_alloc(XFS_FILE_CONTENT_LEN);
     }
 
     if (a_fs_file->meta == NULL) {
@@ -112,7 +112,7 @@ xfs_inode_lookup(TSK_FS_INFO * fs, TSK_FS_FILE * a_fs_file,
     }
 
     size =
-        ext2fs->inode_size >
+        xfs->inode_size >
         sizeof(ext2fs_inode) ? ext2fs->inode_size : sizeof(ext2fs_inode);
     if ((dino_buf = (ext2fs_inode *) tsk_malloc(size)) == NULL) {
         return 1;

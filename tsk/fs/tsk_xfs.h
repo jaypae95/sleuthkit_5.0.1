@@ -14,7 +14,7 @@ extern "C" {
 #define XFS_FS_MAGIC    0x58465342
 #define XFS_MIN_BLOCK_SIZE	512
 #define XFS_MAX_BLOCK_SIZE	65536
-#define EXT2FS_FILE_CONTENT_LEN 
+#define XFS_FILE_CONTENT_LEN  
 
     typedef struct xfs_dinode_core {
         uint8_t           di_magic[2];
@@ -153,14 +153,14 @@ typedef struct xfs_dinode
 	 * sure to update the macros like XFS_LITINO below and
 	 * XFS_BMAP_RBLOCK_DSIZE in xfs_bmap_btree.h.
 	 */
-	uint32_t			di_next_unlinked;/* agi unlinked list ptr */
+	uint32_t di_next_unlinked;/* agi unlinked list ptr */
 	union {
 		xfs_bmdr_block_t di_bmbt;	/* btree root block */
 		xfs_bmbt_rec_32_t di_bmx[1];	/* extent list */
 		xfs_dir2_sf_t	di_dir2sf;	/* shortform directory v2 */
 		char		di_c[1];	/* local contents */
-		uint32_t		di_dev;		/* device for S_IFCHR/S_IFBLK */
-		uuid_t		di_muuid;	/* mount point value */
+		uint32_t	di_dev;		/* device for S_IFCHR/S_IFBLK */
+		uint8_t		di_muuid[16];	/* mount point value */
 		char		di_symlink[1];	/* local symbolic link */
 	} di_u;
 	union {
