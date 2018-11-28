@@ -14,7 +14,7 @@ extern "C" {
 #define XFS_FS_MAGIC    0x58465342
 #define XFS_MIN_BLOCK_SIZE	512
 #define XFS_MAX_BLOCK_SIZE	65536
-#define XFS_FILE_CONTENT_LEN  
+#define XFS_FILE_CONTENT_LEN  15*sizeof(TSK_DADDR_T)
 
     typedef struct xfs_dinode_core {
         uint8_t           di_magic[2];

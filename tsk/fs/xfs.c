@@ -1,6 +1,31 @@
 #include "tsk_fs_i.h"
 #include "tsk_xfs.h"
 
+/* ext2fs_dinode_copy - copy cached disk inode into generic inode
+ *
+ * returns 1 on error and 0 on success
+ * */
+static uint8_t
+xfs_dinode_copy(XFS_INFO * ext2fs, TSK_FS_META * fs_meta,
+    TSK_INUM_T inum, const xfs_dinode * dino_buf)
+{
+
+}
+
+/* xfs_dinode_load - look up disk inode & load into xfs_inode structure
+ * @param xfs A xfs file system information structure
+ * @param dino_inum Metadata address
+ * @param dino_buf The buffer to store the block in (must be size of xfs->inode_size or larger)
+ *
+ * return 1 on error and 0 on success
+ * */
+
+static uint8_t
+xfs_dinode_load(XFS_INFO * xfs, TSK_INUM_T dino_inum,
+    xfs_dinode * dino_buf)
+{
+
+}
 /* xfs_inode_walk - inode iterator
  *
  * flags used: TSK_FS_META_FLAG_USED, TSK_FS_META_FLAG_UNUSED,
@@ -84,6 +109,7 @@ xfs_inode_lookup(TSK_FS_INFO * fs, TSK_FS_FILE * a_fs_file,
 {
     XFS_INFO *xfs = (XFS_INFO *) fs;
     xfs_dinode_core *dino_core_buf = NULL;
+    xfs_dinode *dino_buf = NULL;
     unsigned int size = 0;
 
     if (a_fs_file == NULL) {
@@ -113,17 +139,17 @@ xfs_inode_lookup(TSK_FS_INFO * fs, TSK_FS_FILE * a_fs_file,
 
     size =
         xfs->inode_size >
-        sizeof(ext2fs_inode) ? ext2fs->inode_size : sizeof(ext2fs_inode);
-    if ((dino_buf = (ext2fs_inode *) tsk_malloc(size)) == NULL) {
+        sizeof(xfs_dinode) ? xfs->inode_size : sizeof(xfs_dinode);
+    if ((dino_buf = (xfs_dinode *) tsk_malloc(size)) == NULL) {
         return 1;
     }
 
-    if (ext2fs_dinode_load(ext2fs, inum, dino_buf)) {
+    if (xfs_dinode_load(xfs, inum, dino_buf)) {
         free(dino_buf);
         return 1;
     }
 
-    if (ext2fs_dinode_copy(ext2fs, a_fs_file->meta, inum, dino_buf)) {
+    if (xfs_dinode_copy(xfs, a_fs_file->meta, inum, dino_buf)) {
         free(dino_buf);
         return 1;
     }
