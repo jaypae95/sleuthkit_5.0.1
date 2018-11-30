@@ -354,21 +354,66 @@ xfs_dinode_load(XFS_INFO * xfs, TSK_INUM_T dino_inum,
             // local inode 
             addr = addr + sizeof(xfs_dinode_core);
             xfs_dir2_sf_t * di_dir2sf = &(dino_buf->di_u.di_dir2sf);
-            cnt = tsk_fs_read(fs, addr, (char *) di_dir2sf, sizeof(xfs_dir2_sf_t));
-            if (cnt != sizeof(xfs_dir2_sf_t)) {
+            xfs_dir2_sf_hdr_t * hdr = &(di_dir2sf->hdr);
+            cnt = tsk_fs_read(fs, addr, (char *) hdr, sizeof(xfs_dir2_sf_hdr_t));
+            if (cnt != sizeof(xfs_dir2_sf_hdr_t)) {
                 if (cnt >= 0) {
                     tsk_error_reset();
                     tsk_error_set_errno(TSK_ERR_FS_READ);
                 }
-                tsk_error_set_errstr2("ext2fs_dinode_load: Inode %" PRIuINUM
+                tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
                     " from %" PRIuOFF, dino_inum, addr);
                 return 1;
             }
+            addr = addr + sizeof(xfs_dir2_sf_hdr_t) - 4;
+            xfs_dir2_sf_entry_t *list = &(di_dir2sf->list[0]);
+            cnt = tsk_fs_read(fs, addr, (char *) list, sizeof(uint8_t));
 
+            char *name = list->name;
+            if ((name = (char *) tsk_malloc(list->namelen)) == NULL) {
+                return 1;
+            }
+            addr = addr + sizeof(uint8_t);
+            cnt = tsk_fs_read(fs, addr, (char *) &(list->offset), sizeof(uint8_t) * 2);
+            
+            addr = addr + sizeof(uint16_t);
+            cnt = tsk_fs_read(fs, addr, (char *) &(list->name), list->namelen);
 
+            addr = addr + sizeof(char) * list->namelen;
+            cnt = tsk_fs_read(fs, addr, (char *) &(list->ftype), sizeof(uint8_t));
+            
+            xfs_dir2_inou_t *inumber = &(list->inumber);
+            addr = addr + sizeof(uint8_t);
+            cnt = tsk_fs_read(fs, addr, (char *) inumber, sizeof(xfs_dir2_inou_t));
+            if (cnt != sizeof(xfs_dir2_inou_t)) {
+                if (cnt >= 0) {
+                    tsk_error_reset();
+                    tsk_error_set_errno(TSK_ERR_FS_READ);
+                }
+                tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
+                    " from %" PRIuOFF, dino_inum, addr);
+                return 1;
+            }
+            
             break;
         case 0x2:
-                // extent list
+            // extent list
+            addr = addr + sizeof(xfs_dinode_core);
+            xfs_dir2_sf_t *di_bmx;
+            for (int i = 0; i < tsk_getu32(fs->endian, dino_core_buf->di_nextents); i++) {
+                di_bmx = &(dino_buf->di_u.di_bmx[i]);
+                cnt = tsk_fs_read(fs, addr, (char *) di_bmx, sizeof(xfs_bmbt_rec_32_t));
+                if (cnt != sizeof(xfs_bmbt_rec_32_t)) {
+                    if (cnt >= 0) {
+                        tsk_error_reset();
+                        tsk_error_set_errno(TSK_ERR_FS_READ);
+                    }
+                    tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
+                        " from %" PRIuOFF, dino_inum, addr);
+                    return 1;
+                }
+            }
+
             break;
         case 0x3:
                 // btree root follows

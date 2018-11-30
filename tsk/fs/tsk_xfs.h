@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#define XFS_EXTENT_MAX 21
+
 #define XFS_IN_FMT  0170000
 #define XFS_IN_SOCK 0140000
 #define XFS_IN_LNK  0120000
@@ -150,7 +152,7 @@ typedef union {
 
 typedef struct xfs_dir2_sf_entry {
     uint8_t namelen;
-    uint16_t offset;
+    uint8_t offset[2];
     char name[XFS_MAXNAMLEN];
     uint8_t ftype;
     xfs_dir2_inou_t inumber;
@@ -164,7 +166,7 @@ typedef struct xfs_dir2_sf_hdr {
 
 typedef struct xfs_dir2_sf {
     xfs_dir2_sf_hdr_t hdr;
-    xfs_dir2_sf_entry_t list[1];
+    xfs_dir2_sf_entry_t list[XFS_EXTENT_MAX];
 } xfs_dir2_sf_t;
 
 typedef struct xfs_attr_shortform {
@@ -192,7 +194,7 @@ typedef struct xfs_dinode
 	uint32_t di_next_unlinked;/* agi unlinked list ptr */
 	union {
 		xfs_bmdr_block_t di_bmbt;	/* btree root block */
-		xfs_bmbt_rec_32_t di_bmx[1];	/* extent list */
+		xfs_bmbt_rec_32_t di_bmx[XFS_EXTENT_MAX];	/* extent list */
 		xfs_dir2_sf_t	di_dir2sf;	/* shortform directory v2 */
 		char		di_c[1];	/* local contents */
 		uint32_t	di_dev;		/* device for S_IFCHR/S_IFBLK */
@@ -201,7 +203,7 @@ typedef struct xfs_dinode
 	} di_u;
 	union {
 		xfs_bmdr_block_t di_abmbt;	/* btree root block */
-		xfs_bmbt_rec_32_t di_abmx[1];	/* extent list */
+		xfs_bmbt_rec_32_t di_abmx[XFS_EXTENT_MAX];	/* extent list */
 		xfs_attr_shortform_t di_attrsf;	/* shortform attribute list */
 	} di_a;
 } xfs_dinode;
