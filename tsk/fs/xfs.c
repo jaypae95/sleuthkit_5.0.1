@@ -274,7 +274,7 @@ xfs_dinode_copy(XFS_INFO * xfs, TSK_FS_META * fs_meta,
 
     // /* Fill in the flags value */
     // grp_num = (EXT2_GRPNUM_T) ((inum - fs->first_inum) /
-    //     tsk_getu32(fs->endian, ext2fs->fs->s_inodes_per_group));
+    //     tsk_getu32(fs->endian, ext2fs->fs->sb_icount));
 
 
     // tsk_take_lock(&ext2fs->lock);
@@ -286,7 +286,7 @@ xfs_dinode_copy(XFS_INFO * xfs, TSK_FS_META * fs_meta,
 
     // ibase =
     //     grp_num * tsk_getu32(fs->endian,
-    //     ext2fs->fs->s_inodes_per_group) + fs->first_inum;
+    //     ext2fs->fs->sb_icount) + fs->first_inum;
 
     // /*
     //  * Apply the allocated/unallocated restriction.
@@ -601,7 +601,350 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
     tsk_fprintf(hFile, "Number of Free Blocks: %" PRIu32 "\n",
         tsk_getu32(fs->endian, sb->sb_ifree));
 
+    tsk_fprintf(hFile, "\nBLOCK GROUP INFORMATION\n");
+    tsk_fprintf(hFile, "--------------------------------------------\n");
+
+    tsk_fprintf(hFile, "Number of Block Groups: %" PRIu32 "\n",
+        tsk_getu32(fs->endian, sb->sb_agcount));
+
+    tsk_fprintf(hFile, "Inodes per group: %" PRIu64 "\n",
+        tsk_getu64(fs->endian,sb->sb_icount)/4);
+    tsk_fprintf(hFile, "Blocks per group: %" PRIu32 "\n",
+        tsk_getu32(fs->endian,sb->sb_agblocks));
+
     tsk_release_lock(&xfs->lock);
+
+    for (i = 0; i < tsk_getu32(fs->endian,sb->sb_agcount); i++) {
+        TSK_DADDR_T cg_base;
+        TSK_INUM_T inum;
+
+        /* lock access to grp_buf */
+        tsk_take_lock(&xfs->lock);
+
+        // if (ext2fs_group_load(ext2fs, i)) {
+        //     tsk_release_lock(&ext2fs->lock);
+        //     return 1;
+        // }
+        tsk_fprintf(hFile, "\nGroup: %d:\n", i);
+        // if (ext2fs->ext4_grp_buf != NULL) {
+        //     tsk_fprintf(hFile, "  Block Group Flags: [");
+        //     if (EXT4BG_HAS_FLAG(fs, ext2fs->ext4_grp_buf,
+        //         EXT4_BG_INODE_UNINIT))
+        //         tsk_fprintf(hFile, "INODE_UNINIT, ");
+        //     if (EXT4BG_HAS_FLAG(fs, ext2fs->ext4_grp_buf,
+        //         EXT4_BG_BLOCK_UNINIT))
+        //         tsk_fprintf(hFile, "BLOCK_UNINIT, ");
+        //     if (EXT4BG_HAS_FLAG(fs, ext2fs->ext4_grp_buf,
+        //         EXT4_BG_INODE_ZEROED))
+        //         tsk_fprintf(hFile, "INODE_ZEROED, ");
+        //     tsk_fprintf(hFile, "\b\b]\n");
+        // }
+        inum =
+            fs->first_inum + tsk_gets32(fs->endian,
+            sb->sb_icount) * i;
+        tsk_fprintf(hFile, "  Inode Range: %" PRIuINUM " - ", inum);
+
+        if ((inum + tsk_gets32(fs->endian, sb->sb_icount) - 1) <
+            fs->last_inum)
+            tsk_fprintf(hFile, "%" PRIuINUM "\n",
+            inum + tsk_gets32(fs->endian, sb->sb_icount) - 1);
+        else
+            tsk_fprintf(hFile, "%" PRIuINUM "\n", fs->last_inum);
+
+//         if (tsk_getu32(fs->endian,
+//             ext2fs->fs->
+//             s_feature_incompat) & EXT2FS_FEATURE_INCOMPAT_64BIT) {
+//                 cg_base = ext4_cgbase_lcl(fs, sb, i);
+// #ifdef Ext4_DBG
+//                 printf("DEBUG64: ext2_cgbase_lcl %" PRIuDADDR "\n", cg_base);
+//                 printf("DEBUG64: fs->s_first_data_block %" PRIuDADDR "\n",
+//                     tsk_getu32(fs->endian, sb->s_first_data_block));
+//                 printf("DEBUG64: blocks_per_group %" PRIuDADDR "\n",
+//                     tsk_getu32(fs->endian, sb->s_blocks_per_group));
+//                 printf("DEBUG64: i %" PRIuDADDR " %" PRIuDADDR " %" PRIuDADDR
+//                     "\n", i, tsk_getu32(fs->endian, sb->s_blocks_per_group),
+//                     (uint64_t) i * (uint64_t) tsk_getu32(fs->endian,
+//                     sb->s_blocks_per_group));
+//                 //printf("DEBUG: calculated %"PRIuDADDR"\n", )
+// #endif
+//                 tsk_fprintf(hFile,
+//                     "  Block Range: %" PRIuDADDR " - %" PRIuDADDR "\n",
+//                     cg_base, ((ext4_cgbase_lcl(fs, sb,
+//                     i + 1) - 1) <
+//                     fs->last_block) ? (ext4_cgbase_lcl(fs, sb,
+//                     i + 1) - 1) : fs->last_block);
+//         }
+//         else {
+//             cg_base = ext2_cgbase_lcl(fs, sb, i);
+// #ifdef Ext4_DBG
+//             debug_print_buf(sb, 100);
+//             printf("DEBUG32: ext2_cgbase_lcl %" PRIuDADDR "\n", cg_base);
+//             printf("DEBUG32: fs->s_first_data_block %" PRIu32 "\n",
+//                 tsk_getu32(fs->endian, sb->s_first_data_block));
+//             printf("DEBUG32: blocks_per_group %" PRIu32 "\n",
+//                 tsk_getu32(fs->endian, sb->s_blocks_per_group));
+//             printf("DEBUG32: i: %" PRIu32 " blocks per group: %" PRIu32
+//                 " i*blocks_per_group: %" PRIu32 "\n",
+//                 i, tsk_getu32(fs->endian, sb->s_blocks_per_group),
+//                 (uint64_t) i * (uint64_t) tsk_getu32(fs->endian,
+//                 sb->s_blocks_per_group));
+//             //printf("DEBUG: calculated %"PRIuDADDR"\n", )
+// #endif
+//             tsk_fprintf(hFile,
+//                 "  Block Range: %" PRIuDADDR " - %" PRIuDADDR "\n",
+//                 cg_base, ((ext2_cgbase_lcl(fs, sb,
+//                 i + 1) - 1) <
+//                 fs->last_block) ? (ext2_cgbase_lcl(fs, sb,
+//                 i + 1) - 1) : fs->last_block);
+//         }
+
+
+
+//         tsk_fprintf(hFile, "  Layout:\n");
+
+//         /* only print the super block data if we are not in a sparse
+//         * group
+//         */
+// #ifdef Ext4_DBG
+//         printf("DEBUG: ext2fs_super: %d\n",
+//             ext2fs_bg_has_super(tsk_getu32(fs->endian,
+//             sb->s_feature_ro_compat), i));
+// #endif
+//         /*        if (((tsk_getu32(fs->endian, ext2fs->fs->s_feature_ro_compat) &
+//         EXT2FS_FEATURE_RO_COMPAT_SPARSE_SUPER) &&
+//         (cg_base != tsk_getu32(fs->endian,
+//         ext2fs->grp_buf->bg_block_bitmap)))
+//         || ((tsk_getu32(fs->endian,
+//         ext2fs->fs->s_feature_ro_compat) &
+//         EXT2FS_FEATURE_RO_COMPAT_SPARSE_SUPER) == 0)) {
+//         */
+//         if (ext2fs_bg_has_super(tsk_getu32(fs->endian,
+//             sb->s_feature_ro_compat), i)) {
+//                 TSK_OFF_T boff;
+
+//                 /* the super block is the first 1024 bytes */
+//                 tsk_fprintf(hFile,
+//                     "    Super Block: %" PRIuDADDR " - %" PRIuDADDR "\n",
+//                     cg_base,
+//                     cg_base +
+//                     ((sizeof(ext2fs_sb) + fs->block_size -
+//                     1) / fs->block_size) - 1);
+
+//                 boff = roundup(sizeof(ext2fs_sb), fs->block_size);
+
+//                 /* Group Descriptors */
+//                 tsk_fprintf(hFile,
+//                     "    Group Descriptor Table: %" PRIuDADDR " - ",
+//                     (cg_base + (boff + fs->block_size - 1) / fs->block_size));
+
+//                 //            printf("DEBUG: Groups Count: %u * gd_size: %u = %u\n", ext2fs->groups_count, gd_size, ext2fs->groups_count * gd_size);
+//                 boff += (ext2fs->groups_count * gd_size);
+//                 tsk_fprintf(hFile, "%" PRIuDADDR "\n",
+//                     ((cg_base +
+//                     (boff + fs->block_size - 1) / fs->block_size) -
+//                     1));
+//                 if (fs->ftype == TSK_FS_TYPE_EXT4) {
+//                     tsk_fprintf(hFile,
+//                         "    Group Descriptor Growth Blocks: %" PRIuDADDR
+//                         " - ",
+//                         cg_base + (boff + fs->block_size -
+//                         1) / fs->block_size);
+//                     boff +=
+//                         tsk_getu16(fs->endian,
+//                         ext2fs->fs->pad_or_gdt.s_reserved_gdt_blocks) *
+//                         fs->block_size;
+//                     tsk_fprintf(hFile, "%" PRIuDADDR "\n",
+//                         ((cg_base + (boff + fs->block_size -
+//                         1) / fs->block_size) - 1));
+//                 }
+//         }
+
+
+//         if (ext2fs->ext4_grp_buf != NULL) {
+//             /* The block bitmap is a full block */
+//             tsk_fprintf(hFile,
+//                 "    Data bitmap: %" PRIu64 " - %" PRIu64 "\n",
+//                 ext4_getu64(fs->endian,
+//                 ext2fs->ext4_grp_buf->bg_block_bitmap_hi,
+//                 ext2fs->ext4_grp_buf->bg_block_bitmap_lo),
+//                 ext4_getu64(fs->endian,
+//                 ext2fs->ext4_grp_buf->bg_block_bitmap_hi,
+//                 ext2fs->ext4_grp_buf->bg_block_bitmap_lo));
+
+
+//             /* The inode bitmap is a full block */
+//             tsk_fprintf(hFile,
+//                 "    Inode bitmap: %" PRIu64 " - %" PRIu64 "\n",
+//                 ext4_getu64(fs->endian,
+//                 ext2fs->ext4_grp_buf->bg_inode_bitmap_hi,
+//                 ext2fs->ext4_grp_buf->bg_inode_bitmap_lo),
+//                 ext4_getu64(fs->endian,
+//                 ext2fs->ext4_grp_buf->bg_inode_bitmap_hi,
+//                 ext2fs->ext4_grp_buf->bg_inode_bitmap_lo));
+
+
+//             tsk_fprintf(hFile,
+//                 "    Inode Table: %" PRIu64 " - %" PRIu64 "\n",
+//                 ext4_getu64(fs->endian,
+//                 ext2fs->ext4_grp_buf->bg_inode_table_hi,
+//                 ext2fs->ext4_grp_buf->bg_inode_table_lo),
+//                 ext4_getu64(fs->endian,
+//                 ext2fs->ext4_grp_buf->bg_inode_table_hi,
+//                 ext2fs->ext4_grp_buf->bg_inode_table_lo)
+//                 + ibpg - 1);
+
+//             ext4_fsstat_datablock_helper(fs, hFile, i, cg_base, gd_size);
+//         }
+//         else {
+//             /* The block bitmap is a full block */
+//             tsk_fprintf(hFile,
+//                 "    Data bitmap: %" PRIu32 " - %" PRIu32 "\n",
+//                 tsk_getu32(fs->endian, ext2fs->grp_buf->bg_block_bitmap),
+//                 tsk_getu32(fs->endian, ext2fs->grp_buf->bg_block_bitmap));
+
+
+//             /* The inode bitmap is a full block */
+//             tsk_fprintf(hFile,
+//                 "    Inode bitmap: %" PRIu32 " - %" PRIu32 "\n",
+//                 tsk_getu32(fs->endian, ext2fs->grp_buf->bg_inode_bitmap),
+//                 tsk_getu32(fs->endian, ext2fs->grp_buf->bg_inode_bitmap));
+
+
+//             tsk_fprintf(hFile,
+//                 "    Inode Table: %" PRIu32 " - %" PRIu32 "\n",
+//                 tsk_getu32(fs->endian, ext2fs->grp_buf->bg_inode_table),
+//                 tsk_getu32(fs->endian,
+//                 ext2fs->grp_buf->bg_inode_table) + ibpg - 1);
+        
+//             tsk_fprintf(hFile, "    Data Blocks: ");
+//             // BC: Commented out from Ext4 commit because it produced
+//             // bad data on Ext2 test image.
+//             //if (ext2fs_bg_has_super(tsk_getu32(fs->endian,
+//             //            sb->s_feature_ro_compat), i)) {
+//             if ((tsk_getu32(fs->endian, ext2fs->fs->s_feature_ro_compat) &
+//                 EXT2FS_FEATURE_RO_COMPAT_SPARSE_SUPER) &&
+//                 (cg_base == tsk_getu32(fs->endian,
+//                 ext2fs->grp_buf->bg_block_bitmap))) {
+
+//                     /* it goes from the end of the inode bitmap to before the
+//                     * table
+//                     *
+//                     * This hard coded aspect does not scale ...
+//                     */
+
+//                     tsk_fprintf(hFile, "%" PRIu32 " - %" PRIu32 ", ",
+//                         tsk_getu32(fs->endian,
+//                         ext2fs->grp_buf->bg_inode_bitmap) + 1,
+//                         tsk_getu32(fs->endian,
+//                         ext2fs->grp_buf->bg_inode_table) - 1);
+//             }
+
+//             tsk_fprintf(hFile, "%" PRIu32 " - %" PRIu32 "\n",
+//                 (uint64_t) tsk_getu32(fs->endian,
+//                 ext2fs->grp_buf->bg_inode_table) + ibpg,
+//                 ((ext2_cgbase_lcl(fs, sb, i + 1) - 1) <
+//                 fs->last_block) ? (ext2_cgbase_lcl(fs, sb,
+//                 i + 1) - 1) : fs->last_block);
+//         }
+
+//         /* Print the free info */
+
+//         /* The last group may not have a full number of blocks */
+//         if (i != (ext2fs->groups_count - 1)) {
+//             uint64_t tmpInt;
+
+//             if (ext2fs->ext4_grp_buf != NULL) 
+//                 // @@@ Should be 32-bit
+//                 tmpInt = tsk_getu16(fs->endian,
+//                     ext2fs->ext4_grp_buf->bg_free_inodes_count_lo);
+//             else
+//                 tmpInt = tsk_getu16(fs->endian,
+//                     ext2fs->grp_buf->bg_free_inodes_count);
+            
+//             tsk_fprintf(hFile,
+//                 "  Free Inodes: %" PRIu32 " (%" PRIu32 "%%)\n",
+//                 tmpInt, (100 * tmpInt) /  
+//                 tsk_getu32(fs->endian, sb->sb_icount));
+
+
+//             if (ext2fs->ext4_grp_buf != NULL) 
+//                 // @@@ Should be 32-bit
+//                 tmpInt = tsk_getu16(fs->endian,
+//                     ext2fs->ext4_grp_buf->bg_free_blocks_count_lo);
+//             else
+//                 tmpInt = tsk_getu16(fs->endian,
+//                     ext2fs->grp_buf->bg_free_blocks_count);
+
+//             tsk_fprintf(hFile,
+//                 "  Free Blocks: %" PRIu32 " (%" PRIu32 "%%)\n",
+//                 tmpInt,
+//                 (100 * tmpInt) / 
+//                 tsk_getu32(fs->endian, sb->s_blocks_per_group));
+//         }
+//         else {
+//             TSK_INUM_T inum_left;
+//             TSK_DADDR_T blk_left;
+//             uint64_t tmpInt;
+
+//             inum_left =
+//                 (fs->last_inum % tsk_gets32(fs->endian,
+//                 sb->sb_icount)) - 1;
+
+//             if (inum_left == 0)
+//                 inum_left = tsk_getu32(fs->endian, sb->sb_icount);
+
+//             if (ext2fs->ext4_grp_buf != NULL) 
+//                 // @@@ Should be 32-bit
+//                 tmpInt = tsk_getu16(fs->endian,
+//                     ext2fs->ext4_grp_buf->bg_free_inodes_count_lo);
+//             else
+//                 tmpInt = tsk_getu16(fs->endian,
+//                     ext2fs->grp_buf->bg_free_inodes_count);
+            
+//             tsk_fprintf(hFile, "  Free Inodes: %" PRIu32 " (%d%%)\n",
+//                 tmpInt, 100 * tmpInt / inum_left); 
+
+//             /* Now blocks */
+//             blk_left =
+//                 fs->block_count % tsk_getu32(fs->endian,
+//                 sb->s_blocks_per_group);
+//             if (blk_left == 0)
+//                 blk_left = tsk_getu32(fs->endian, sb->s_blocks_per_group);
+
+//             if (ext2fs->ext4_grp_buf != NULL) 
+//                 // @@@ Should be 32-bit
+//                 tmpInt = tsk_getu16(fs->endian,
+//                     ext2fs->ext4_grp_buf->bg_free_blocks_count_lo);
+//             else
+//                 tmpInt = tsk_getu16(fs->endian,
+//                     ext2fs->grp_buf->bg_free_blocks_count);
+
+//             tsk_fprintf(hFile, "  Free Blocks: %" PRIu32 " (%d%%)\n",
+//                 tmpInt, 100 * tmpInt / blk_left);
+//         }
+
+
+//         if (ext2fs->ext4_grp_buf != NULL) {
+//             // @@@@ Sould be 32-bit
+//             tsk_fprintf(hFile, "  Total Directories: %" PRIu16 "\n",
+//                 tsk_getu16(fs->endian, ext2fs->ext4_grp_buf->bg_used_dirs_count_lo));
+
+//             tsk_fprintf(hFile, "  Stored Checksum: 0x%04" PRIX16 "\n",
+//                 tsk_getu16(fs->endian, ext2fs->ext4_grp_buf->bg_checksum));
+// #ifdef EXT4_CHECKSUMS
+//             //Need Non-GPL CRC16
+//             tsk_fprintf(hFile, "  Calculated Checksum: 0x%04" PRIX16 "\n",
+//                 ext4_group_desc_csum(ext2fs->fs, i, ext2fs->ext4_grp_buf));
+// #endif
+//         }
+//         else {
+//             tsk_fprintf(hFile, "  Total Directories: %" PRIu16 "\n",
+//                tsk_getu16(fs->endian, ext2fs->grp_buf->bg_used_dirs_count));
+//         }
+
+        tsk_release_lock(&xfs->lock);
+    }
+
 
     return 0;
 }

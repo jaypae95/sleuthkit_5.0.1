@@ -8,6 +8,9 @@
 extern "C" {
 #endif
 
+//add
+#define PRI_XFSGRP	PRIu64
+
 #define XFS_IN_FMT  0170000
 #define XFS_IN_SOCK 0140000
 #define XFS_IN_LNK  0120000
@@ -134,9 +137,9 @@ extern "C" {
         uint8_t sb_checksum[4];
         uint8_t sb_sa_extlen[8];
         uint8_t sb_pqinode[8];
-        uint8_t lsnum[8];
-        uint8_t meta_uuid[16];
-        uint8_t rrmapino[8];
+        uint8_t sb_lsnum[8];
+        uint8_t sb_meta_uuid[16];
+        uint8_t sb_rrmapino[8];
 
     } xfs_sb;
 
