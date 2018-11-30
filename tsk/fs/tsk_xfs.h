@@ -8,13 +8,35 @@
 extern "C" {
 #endif
 
+#define XFS_IN_FMT  0170000
+#define XFS_IN_SOCK 0140000
+#define XFS_IN_LNK  0120000
+#define XFS_IN_REG  0100000
+#define XFS_IN_BLK  0060000
+#define XFS_IN_DIR  0x41ed
+#define XFS_IN_CHR  0020000
+#define XFS_IN_FIFO  0010000
+
+/* xfs directory file types  */
+#define XFS_DE_UNKNOWN         0
+#define XFS_DE_REG        1
+#define XFS_DE_DIR             2
+#define XFS_DE_CHR          3
+#define XFS_DE_BLK          4
+#define XFS_DE_FIFO            5
+#define XFS_DE_SOCK            6
+#define XFS_DE_LNK         7
+#define XFS_DE_MAX             8
+
 #define XFS_FIRSTINO    0x1
 #define XFS_ROOTINO     0x1
 #define XFS_SBOFF       0x0
 #define XFS_FS_MAGIC    0x58465342
 #define XFS_MIN_BLOCK_SIZE	512
 #define XFS_MAX_BLOCK_SIZE	65536
-#define XFS_FILE_CONTENT_LEN  15*sizeof(TSK_DADDR_T)
+#define XFS_FILE_CONTENT_LEN  20*sizeof(TSK_DADDR_T)
+
+#define XFS_MAXNAMLEN 255
 
     typedef struct xfs_dinode_core {
         uint8_t           di_magic[2];
@@ -28,9 +50,9 @@ extern "C" {
         uint8_t           di_projid[2];
         uint8_t           di_pad[8];
         uint8_t           di_flushiter[2];
-        uint8_t           di_atime[4];
-        uint8_t           di_mtime[4];
-        uint8_t           di_ctime[4];
+        uint8_t           di_atime[8];
+        uint8_t           di_mtime[8];
+        uint8_t           di_ctime[8];
         uint8_t           di_size[8];
         uint8_t           di_nblocks[8];
         uint8_t           di_extsize[4];
@@ -42,6 +64,20 @@ extern "C" {
         uint8_t           di_dmstate[2];
         uint8_t           di_flags[2];
         uint8_t           di_gen[4];
+
+        /* di_next_unlinked is the only non-core field in the old dinode */ 
+        uint8_t di_next_unlinked[4]; 
+        
+        /* version 5 filesystem (inode version 3) fields start here */
+        uint8_t di_crc[4];
+        uint8_t di_changecount[8];
+        uint8_t di_lsn[8];
+        uint8_t di_flags2[8];
+        uint8_t di_cowextsize[4];
+        uint8_t di_pad2[12];
+        uint8_t di_crtime[8];
+        uint8_t di_ino[8];
+        uint8_t di_uuid[16];
     } xfs_dinode_core;
 
     typedef struct {
@@ -55,7 +91,7 @@ extern "C" {
         uint8_t sb_rootino[8];     /* u32 */
         uint8_t sb_rbmino[8];     /* u32 */
         uint8_t sb_rsumino[8];     /* u32 */
-        uint8_t sb_rextsize[8];     /* u32 */
+        uint8_t sb_rextsize[4];     /* u32 */
         uint8_t sb_agblocks[4];
         uint8_t sb_agcount[4];
         uint8_t sb_rbmblocks[4];
@@ -64,7 +100,7 @@ extern "C" {
         uint8_t sb_sectsize[2];
         uint8_t sb_inodesize[2];
         uint8_t sb_inopblock[2];
-        char    sb_fname[8];
+        char    sb_fname[12];
         uint8_t sb_blocklog;
         uint8_t sb_sectlog;
         uint8_t sb_inodelog;
@@ -115,7 +151,7 @@ typedef union {
 typedef struct xfs_dir2_sf_entry {
     uint8_t namelen;
     uint16_t offset;
-    uint8_t name[1];
+    char name[XFS_MAXNAMLEN];
     uint8_t ftype;
     xfs_dir2_inou_t inumber;
 } xfs_dir2_sf_entry_t;
@@ -147,7 +183,7 @@ typedef struct xfs_attr_shortform {
 
 typedef struct xfs_dinode
 {
-	xfs_dinode_core	di_core;
+	xfs_dinode_core di_core;
 	/*
 	 * In adding anything between the core and the union, be
 	 * sure to update the macros like XFS_LITINO below and
