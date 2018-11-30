@@ -62,7 +62,77 @@ static TSK_RETVAL_ENUM
 xfs_dent_parse_block(XFS_INFO * xfs, TSK_FS_DIR * a_fs_dir,
     uint8_t a_is_del, TSK_LIST ** list_seen, char *buf, int len)
 {
+    TSK_FS_INFO *fs = &(xfs->fs_info);
 
+    int dellen = 0;
+    int idx;
+    uint16_t reclen;
+    uint32_t inode;
+    char *dirPtr;
+    TSK_FS_NAME *fs_name;
+    int minreclen = 4;
+
+
+    if ((fs_name = tsk_fs_name_alloc(XFS_MAXNAMLEN + 1, 0)) == NULL)
+        return TSK_ERR;
+
+    /* update each time by the actual length instead of the
+     ** recorded length so we can view the deleted entries
+
+        we don't consider deleted entries
+     */
+    // local inode 
+    // for (idx = 0; idx <= len; idx += minreclen) {
+    //     unsigned int namelen;
+    //     dirPtr = &buf[idx];
+
+    //     xfs_dir2_sf_entry_t * dir = (xfs_dir2_sf_entry_t*) dirPtr;
+    //     inode = tsk_getu64(fs->endian, dir->inumber);
+    //     namelen = tsk_getu16(fs->endian, dir->namelen);
+    //     reclen = tsk_getu16(fs->endian, dir->reclen);
+    // }
+    // addr = addr + sizeof(xfs_dinode_core);
+    // xfs_dir2_sf_t * di_dir2sf = &(dino_buf->di_u.di_dir2sf);
+    // xfs_dir2_sf_hdr_t * hdr = &(di_dir2sf->hdr);
+    // cnt = tsk_fs_read(fs, addr, (char *) hdr, sizeof(xfs_dir2_sf_hdr_t));
+    // if (cnt != sizeof(xfs_dir2_sf_hdr_t)) {
+    //     if (cnt >= 0) {
+    //         tsk_error_reset();
+    //         tsk_error_set_errno(TSK_ERR_FS_READ);
+    //     }
+    //     tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
+    //         " from %" PRIuOFF, dino_inum, addr);
+    //     return 1;
+    // }
+    // addr = addr + sizeof(xfs_dir2_sf_hdr_t) - 4;
+    // xfs_dir2_sf_entry_t *list = &(di_dir2sf->list[0]);
+    // cnt = tsk_fs_read(fs, addr, (char *) list, sizeof(uint8_t));
+
+    // char *name = list->name;
+    // if ((name = (char *) tsk_malloc(list->namelen)) == NULL) {
+    //     return 1;
+    // }
+    // addr = addr + sizeof(uint8_t);
+    // cnt = tsk_fs_read(fs, addr, (char *) &(list->offset), sizeof(uint8_t) * 2);
+    
+    // addr = addr + sizeof(uint16_t);
+    // cnt = tsk_fs_read(fs, addr, (char *) &(list->name), list->namelen);
+
+    // addr = addr + sizeof(char) * list->namelen;
+    // cnt = tsk_fs_read(fs, addr, (char *) &(list->ftype), sizeof(uint8_t));
+    
+    // xfs_dir2_inou_t *inumber = &(list->inumber);
+    // addr = addr + sizeof(uint8_t);
+    // cnt = tsk_fs_read(fs, addr, (char *) inumber, sizeof(xfs_dir2_inou_t));
+    // if (cnt != sizeof(xfs_dir2_inou_t)) {
+    //     if (cnt >= 0) {
+    //         tsk_error_reset();
+    //         tsk_error_set_errno(TSK_ERR_FS_READ);
+    //     }
+    //     tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
+    //         " from %" PRIuOFF, dino_inum, addr);
+    //     return 1;
+    // }
 }
 
 TSK_RETVAL_ENUM

@@ -9,6 +9,7 @@ extern "C" {
 #endif
 
 #define XFS_EXTENT_MAX 21
+#define XFS_DIR2_DATA_FD_COUNT 3
 
 #define XFS_IN_FMT  0170000
 #define XFS_IN_SOCK 0140000
@@ -142,12 +143,87 @@ extern "C" {
 
     } xfs_sb;
 
-/*
+    typedef __uint16_t xfs_dir2_data_off_t;
+    typedef __uint32_t xfs_dir2_dataptr_t;
+    typedef __uint64_t xfs_ino_t;
+
+    typedef struct xfs_dir2_block_tail
+    {
+        __uint32_t count;
+        __uint32_t stale;
+    } xfs_dir2_block_tail_t;
+
+    typedef struct xfs_dir2_leaf_entry
+    {
+        uint32_t hashval;
+        xfs_dir2_dataptr_t address;
+    } xfs_dir2_leaf_entry_t;
+
+    typedef struct xfs_dir2_data_unused
+    {
+        __uint16_t freetag; /* 0xffff */
+        xfs_dir2_data_off_t length;
+        xfs_dir2_data_off_t tag;
+    } xfs_dir2_data_unused_t;
+
+    typedef struct xfs_dir2_data_entry
+    {
+        xfs_ino_t inumber;
+        __uint8_t namelen;
+        __uint8_t name[1];
+        __uint8_t ftype;
+        xfs_dir2_data_off_t tag;
+    } xfs_dir2_data_entry_t;
+
+    typedef union {
+        xfs_dir2_data_entry_t entry;
+        xfs_dir2_data_unused_t unused;
+    } xfs_dir2_data_union_t;
+
+    typedef struct xfs_dir2_data_free
+    {
+        xfs_dir2_data_off_t offset;
+        xfs_dir2_data_off_t length;
+    } xfs_dir2_data_free_t;
+
+    struct xfs_dir3_data_hdr
+    {
+        struct xfs_dir3_blk_hdr hdr;
+        xfs_dir2_data_free_t best_free[XFS_DIR2_DATA_FD_COUNT];
+        uint32_t pad;
+    };
+
+    struct xfs_dir3_blk_hdr
+    {
+        uint32_t magic;
+        uint32_t crc;
+        uint64_t blkno;
+        uint64_t lsn;
+        uint8_t di_uuid[16];
+        uint64_t owner;
+    };
+
+    typedef struct xfs_dir2_data_hdr
+    {
+        __uint32_t magic;
+        xfs_dir2_data_free_t bestfree[XFS_DIR2_DATA_FD_COUNT];
+    } xfs_dir2_data_hdr_t;
+    
+    typedef struct xfs_dir2_block
+    {
+        xfs_dir2_data_hdr_t hdr;
+        xfs_dir2_data_union_t u[1];
+        xfs_dir2_leaf_entry_t leaf[1];
+        xfs_dir2_block_tail_t tail;
+    } xfs_dir2_block_t;
+
+    /*
  * Bmap root header, on-disk form only.
  */
-typedef struct xfs_bmdr_block {
-	uint16_t		bb_level;	/* 0 is a leaf */
-	uint16_t		bb_numrecs;	/* current # of data records */
+    typedef struct xfs_bmdr_block
+    {
+        uint16_t bb_level;   /* 0 is a leaf */
+        uint16_t bb_numrecs; /* current # of data records */
 } xfs_bmdr_block_t;
 
 typedef struct xfs_bmbt_rec_32

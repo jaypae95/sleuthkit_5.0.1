@@ -169,133 +169,33 @@ xfs_dinode_copy(XFS_INFO * xfs, TSK_FS_META * fs_meta,
         }
     }
 
-    // if (tsk_getu32(fs->endian, dino_buf->i_flags) & EXT2_IN_EXTENTS) {
-    //     uint32_t *addr_ptr;
-    //     fs_meta->content_type = TSK_FS_META_CONTENT_TYPE_EXT4_EXTENTS;
-    //     /* NOTE TSK_DADDR_T != uint32_t, so lets make sure we use uint32_t */
-    //     addr_ptr = (uint32_t *) fs_meta->content_ptr;
-    //     for (i = 0; i < EXT2FS_NDADDR + EXT2FS_NIADDR; i++) {
-    //         addr_ptr[i] = tsk_gets32(fs->endian, dino_buf->i_block[i]);;
-    //     }
-    // }
-    // else {
-    //     TSK_DADDR_T *addr_ptr;
-    //     addr_ptr = (TSK_DADDR_T *) fs_meta->content_ptr;
-    //     for (i = 0; i < EXT2FS_NDADDR + EXT2FS_NIADDR; i++)
-    //         addr_ptr[i] = tsk_gets32(fs->endian, dino_buf->i_block[i]);
+    TSK_OFF_T addr;
+    ssize_t cnt;
+    xfs_dinode_core *dino_core_buf = &(dino_buf->di_core);
 
-    //     /* set the link string
-    //      * the size check prevents us from trying to allocate a huge amount of
-    //      * memory for a bad inode value
-    //      */
-    //     if ((fs_meta->type == TSK_FS_META_TYPE_LNK)
-    //         && (fs_meta->size < EXT2FS_MAXPATHLEN) && (fs_meta->size >= 0)) {
-    //         int i;
+    uint64_t root_ino = tsk_getu64(fs->endian, xfs->fs->sb_rootino);
+    uint16_t inodesize = tsk_getu16(fs->endian, xfs->fs->sb_inodesize);
 
-    //         if ((fs_meta->link =
-    //                 tsk_malloc((size_t) (fs_meta->size + 1))) == NULL)
-    //             return 1;
-
-    //         /* it is located directly in the pointers */
-    //         if (fs_meta->size < 4 * (EXT2FS_NDADDR + EXT2FS_NIADDR)) {
-    //             unsigned int j;
-    //             unsigned int count = 0;
-
-    //             for (i = 0; i < (EXT2FS_NDADDR + EXT2FS_NIADDR) &&
-    //                 count < fs_meta->size; i++) {
-    //                 char *a_ptr = (char *) &dino_buf->i_block[i];
-    //                 for (j = 0; j < 4 && count < fs_meta->size; j++) {
-    //                     fs_meta->link[count++] = a_ptr[j];
-    //                 }
-    //             }
-    //             fs_meta->link[count] = '\0';
-
-    //             /* clear the content pointer data to avoid the prog from reading them */
-    //             memset(fs_meta->content_ptr, 0, fs_meta->content_len);
-    //         }
-
-    //         /* it is in blocks */
-    //         else {
-    //             TSK_FS_INFO *fs = (TSK_FS_INFO *) & ext2fs->fs_info;
-    //             char *data_buf = NULL;
-    //             char *a_ptr = fs_meta->link;
-    //             unsigned int total_read = 0;
-    //             TSK_DADDR_T *addr_ptr = fs_meta->content_ptr;;
-
-    //             if ((data_buf = tsk_malloc(fs->block_size)) == NULL) {
-    //                 return 1;
-    //             }
-
-    //             /* we only need to do the direct blocks due to the limit
-    //              * on path length */
-    //             for (i = 0; i < EXT2FS_NDADDR && total_read < fs_meta->size;
-    //                 i++) {
-    //                 ssize_t cnt;
-
-    //                 cnt = tsk_fs_read_block(fs,
-    //                     addr_ptr[i], data_buf, fs->block_size);
-
-    //                 if (cnt != fs->block_size) {
-    //                     if (cnt >= 0) {
-    //                         tsk_error_reset();
-    //                         tsk_error_set_errno(TSK_ERR_FS_READ);
-    //                     }
-    //                     tsk_error_set_errstr2
-    //                         ("ext2fs_dinode_copy: symlink destination from %"
-    //                         PRIuDADDR, addr_ptr[i]);
-    //                     free(data_buf);
-    //                     return 1;
-    //                 }
-
-    //                 int copy_len =
-    //                     (fs_meta->size - total_read <
-    //                     fs->block_size) ? (int) (fs_meta->size -
-    //                     total_read) : (int) (fs->block_size);
-
-    //                 memcpy(a_ptr, data_buf, copy_len);
-    //                 total_read += copy_len;
-    //                 a_ptr = (char *) ((uintptr_t) a_ptr + copy_len);
-    //             }
-
-    //             /* terminate the string */
-    //             *a_ptr = '\0';
-    //             free(data_buf);
-    //         }
-
-    //         /* Clean up name */
-    //         i = 0;
-    //         while (fs_meta->link[i] != '\0') {
-    //             if (TSK_IS_CNTRL(fs_meta->link[i]))
-    //                 fs_meta->link[i] = '^';
-    //             i++;
-    //         }
-    //     }
-    // }
-
-    // /* Fill in the flags value */
-    // grp_num = (EXT2_GRPNUM_T) ((inum - fs->first_inum) /
-    //     tsk_getu32(fs->endian, ext2fs->fs->s_inodes_per_group));
-
-
-    // tsk_take_lock(&ext2fs->lock);
-
-    // if (ext2fs_imap_load(ext2fs, grp_num)) {
-    //     tsk_release_lock(&ext2fs->lock);
-    //     return 1;
-    // }
-
-    // ibase =
-    //     grp_num * tsk_getu32(fs->endian,
-    //     ext2fs->fs->s_inodes_per_group) + fs->first_inum;
-
-    // /*
-    //  * Apply the allocated/unallocated restriction.
-    //  */
-    // fs_meta->flags = (isset(ext2fs->imap_buf, inum - ibase) ?
-    //     TSK_FS_META_FLAG_ALLOC : TSK_FS_META_FLAG_UNALLOC);
-
-    // tsk_release_lock(&ext2fs->lock);
-
+    addr = root_ino * inodesize + sizeof(xfs_dinode_core);
+    // we will deal with shortform later
+    // todo b tree ~~  
+    if (dino_core_buf->di_format == 0x2) {
+        // extent list
+        xfs_dir2_sf_t *di_bmx;
+        for (int i = 0; i < tsk_getu32(fs->endian, dino_core_buf->di_nextents); i++) {
+            di_bmx = &(dino_buf->di_u.di_bmx[i]);
+            cnt = tsk_fs_read(fs, addr, (char *) di_bmx, sizeof(xfs_bmbt_rec_32_t));
+            if (cnt != sizeof(xfs_bmbt_rec_32_t)) {
+                if (cnt >= 0) {
+                    tsk_error_reset();
+                    tsk_error_set_errno(TSK_ERR_FS_READ);
+                }
+                tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
+                    " from %" PRIuOFF, inum, addr);
+                return 1;
+            }
+        }
+    }
 
     /*
      * Apply the used/unused restriction.
@@ -345,7 +245,16 @@ xfs_dinode_load(XFS_INFO * xfs, TSK_INUM_T dino_inum,
     addr = root_ino * inodesize;
     
     cnt = tsk_fs_read(fs, addr, (char *)dino_core_buf, sizeof(xfs_dinode_core));
-
+    if (cnt != sizeof(xfs_dinode_core)) {
+        if (cnt >= 0) {
+            tsk_error_reset();
+            tsk_error_set_errno(TSK_ERR_FS_READ);
+        }
+        tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
+            " from %" PRIuOFF, dino_inum, addr);
+        return 1;
+    }
+    
     switch (dino_core_buf->di_format) {
         case 0x0:
             //
