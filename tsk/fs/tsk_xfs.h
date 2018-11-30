@@ -126,6 +126,18 @@ extern "C" {
         uint8_t sb_logsectsize[2];
         uint8_t sb_logsunit[4];
         uint8_t sb_features2[4];
+        //add
+        uint8_t sb_badfeatures2[4];
+        uint8_t sb_features_cmpt[4];
+        uint8_t sb_features_rocmpt[4];
+        uint8_t sb_features_incmpt[4];
+        uint8_t sb_checksum[4];
+        uint8_t sb_sa_extlen[8];
+        uint8_t sb_pqinode[8];
+        uint8_t lsnum[8];
+        uint8_t meta_uuid[16];
+        uint8_t rrmapino[8];
+
     } xfs_sb;
 
 /*
