@@ -502,6 +502,7 @@ extern "C" {
 
         TSK_FS_META_NAME_LIST *name2;   ///< Name of file stored in metadata (FATXX and NTFS Only)
         char *link;             ///< Name of target file if this is a symbolic link
+        int inode_format;
     } TSK_FS_META;
 
 

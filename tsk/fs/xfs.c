@@ -173,87 +173,23 @@ xfs_dinode_copy(XFS_INFO * xfs, TSK_FS_META * fs_meta,
     ssize_t cnt;
     xfs_dinode_core *dino_core_buf = &(dino_buf->di_core);
 
-    uint64_t root_ino = tsk_getu64(fs->endian, xfs->fs->sb_rootino);
     uint16_t inodesize = tsk_getu16(fs->endian, xfs->fs->sb_inodesize);
 
-    addr = root_ino * inodesize + sizeof(xfs_dinode_core);
     
     xfs_dir2_sf_t * di_dir2sf = &(dino_buf->di_u.di_dir2sf);
     // todo b tree ~~  
     if (dino_core_buf->di_format == 0x1) { // short form
-        
-        xfs_dir2_sf_hdr_t * hdr = &(di_dir2sf->hdr);
-        cnt = tsk_fs_read(fs, addr, (char *) hdr, sizeof(xfs_dir2_sf_hdr_t));
-        if (cnt != sizeof(xfs_dir2_sf_hdr_t)) {
-            if (cnt >= 0) {
-                tsk_error_reset();
-                tsk_error_set_errno(TSK_ERR_FS_READ);
-            }
-            tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
-                " from %" PRIuOFF, inum, addr);
-            return 1;
-        }
-        addr = addr + sizeof(xfs_dir2_sf_hdr_t) - 4;
-        for (int i = 0; i < hdr->count; i++) {
-            xfs_dir2_sf_entry_t *list = &(di_dir2sf->list[i]);
-            cnt = tsk_fs_read(fs, addr, (char *) list, sizeof(uint8_t)); //name len
-            
-            addr = addr + sizeof(uint8_t);
-            cnt = tsk_fs_read(fs, addr, (char *) &(list->offset), sizeof(uint8_t) * 2); // offset
-            
-            char *name = list->name;
-            if ((name = (char *) tsk_malloc(list->namelen)) == NULL) {
-                return 1;
-            }
-            addr = addr + sizeof(uint16_t);
-            cnt = tsk_fs_read(fs, addr, (char *) &(list->name), list->namelen); // file name
-
-            addr = addr + sizeof(char) * list->namelen;
-            cnt = tsk_fs_read(fs, addr, (char *) &(list->ftype), sizeof(uint8_t)); // file type
-            
-            xfs_dir2_inou_t *inumber = &(list->inumber);
-            addr = addr + sizeof(uint8_t);
-            cnt = tsk_fs_read(fs, addr, (char *) inumber, sizeof(xfs_dir2_inou_t)); // inumber
-            if (cnt != sizeof(xfs_dir2_inou_t)) {
-                if (cnt >= 0) {
-                    tsk_error_reset();
-                    tsk_error_set_errno(TSK_ERR_FS_READ);
-                }
-                tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
-                    " from %" PRIuOFF, inum, addr);
-                return 1;
-            }
-            addr += sizeof(xfs_dir2_inou_t) - 4;
-        }
-
-        if (fs_meta->content_len != XFS_FILE_CONTENT_LEN) {
-            if ((fs_meta =
-                    tsk_fs_meta_realloc(fs_meta,
-                        XFS_FILE_CONTENT_LEN)) == NULL) {
-                return 1;
-            }
-        }
-
-        uint32_t *addr_ptr32;
-        uint64_t *addr_ptr64;
+        fs_meta->inode_format = 0x1;
+        addr = tsk_getu64(fs->endian, dino_core_buf->di_ino) * inodesize + sizeof(xfs_dinode_core);
+        TSK_DADDR_T *addr_ptr;
         // fs_meta->content_type = TSK_FS_META_CONTENT_TYPE_EXT4_EXTENTS;
         /* NOTE TSK_DADDR_T != uint32_t, so lets make sure we use uint32_t */
-        if (di_dir2sf->hdr.i8count == 0) {
-                addr_ptr32 = (uint32_t *) fs_meta->content_ptr;
-        } else {
-                addr_ptr64 = (uint64_t *) fs_meta->content_ptr;
-        }
-        for (i = 0; i < hdr->count; i++) {
-            if (di_dir2sf->hdr.i8count == 0) {
-                addr_ptr32[i] = tsk_gets32(fs->endian, di_dir2sf->list[i].inumber.i4.i);
-            } else {
-                addr_ptr64[i] = tsk_gets64(fs->endian, di_dir2sf->list[i].inumber.i8.i);
-            }
-        }
-            
+        addr_ptr = (TSK_DADDR_T *) fs_meta->content_ptr;
+        addr_ptr[0] = addr;
     }
     else if (dino_core_buf->di_format == 0x2) {  // extent
         // extent list
+        fs_meta->inode_format = 0x2;
         xfs_dir2_sf_t *di_bmx;
         for (int i = 0; i < tsk_getu32(fs->endian, dino_core_buf->di_nextents); i++) {
             di_bmx = &(dino_buf->di_u.di_bmx[i]);
