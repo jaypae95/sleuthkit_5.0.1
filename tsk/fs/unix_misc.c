@@ -16,6 +16,7 @@
 #include "tsk_fs_i.h"
 #include "tsk_ffs.h"
 #include "tsk_ext2fs.h"
+#include "tsk_xfs.h"
 
 
 /*********** MAKE DATA RUNS ***************/
@@ -49,8 +50,12 @@ unix_make_data_run_direct(TSK_FS_INFO * fs, TSK_FS_ATTR * fs_attr,
     if (TSK_FS_TYPE_ISFFS(fs->ftype)) {
         FFS_INFO *ffs = (FFS_INFO *) fs;
         fs_blen = ffs->ffsbsize_f;
+    } else if (TSK_FS_TYPE_ISXFS(fs->ftype)) {
+        // todo
+        //return 4096;
+        fs_blen = 1;
     }
-    else {
+    else { // ext2
         fs_blen = 1;
     }
 
@@ -278,7 +283,8 @@ tsk_fs_unix_make_data_run(TSK_FS_FILE * fs_file)
     }
 
     if ((TSK_FS_TYPE_ISFFS(fs->ftype) == 0)
-        && (TSK_FS_TYPE_ISEXT(fs->ftype) == 0)) {
+        && (TSK_FS_TYPE_ISEXT(fs->ftype) == 0)
+        && (TSK_FS_TYPE_ISXFS(fs->ftype) == 0)) {
         tsk_error_set_errno(TSK_ERR_FS_INODE_COR);
         tsk_error_set_errstr
             ("unix_make_run: Called with non-Unix file system: %x",

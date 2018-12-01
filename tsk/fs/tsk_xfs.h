@@ -9,6 +9,7 @@ extern "C" {
 #endif
 
 #define XFS_EXTENT_MAX 21
+#define XFS_SHORTFORM_MAX 38
 #define XFS_DIR2_DATA_FD_COUNT 3
 //add
 #define PRI_XFSGRP	PRIu64
@@ -39,7 +40,7 @@ extern "C" {
 #define XFS_FS_MAGIC    0x58465342
 #define XFS_MIN_BLOCK_SIZE	512
 #define XFS_MAX_BLOCK_SIZE	65536
-#define XFS_FILE_CONTENT_LEN  20*sizeof(TSK_DADDR_T)
+#define XFS_FILE_CONTENT_LEN  0x150
 
 #define XFS_MAXNAMLEN 255
 
@@ -256,7 +257,7 @@ typedef struct xfs_dir2_sf_hdr {
 
 typedef struct xfs_dir2_sf {
     xfs_dir2_sf_hdr_t hdr;
-    xfs_dir2_sf_entry_t list[XFS_EXTENT_MAX];
+    xfs_dir2_sf_entry_t list[XFS_SHORTFORM_MAX];
 } xfs_dir2_sf_t;
 
 typedef struct xfs_attr_shortform {
