@@ -188,13 +188,6 @@ extern "C" {
         xfs_dir2_data_off_t length;
     } xfs_dir2_data_free_t;
 
-    struct xfs_dir3_data_hdr
-    {
-        struct xfs_dir3_blk_hdr hdr;
-        xfs_dir2_data_free_t best_free[XFS_DIR2_DATA_FD_COUNT];
-        uint32_t pad;
-    };
-
     struct xfs_dir3_blk_hdr
     {
         uint32_t magic;
@@ -203,6 +196,13 @@ extern "C" {
         uint64_t lsn;
         uint8_t di_uuid[16];
         uint64_t owner;
+    };
+
+    struct xfs_dir3_data_hdr
+    {
+        struct xfs_dir3_blk_hdr hdr;
+        xfs_dir2_data_free_t best_free[XFS_DIR2_DATA_FD_COUNT];
+        uint32_t pad;
     };
 
     typedef struct xfs_dir2_data_hdr
