@@ -2,6 +2,8 @@
 #include "tsk_xfs.h"
 #include <sys/stat.h>
 
+#define xfs_cgbase_lcl(fsi, fs, c)	\
+	tsk_getu32(fsi->endian, fs->sb_agblocks)*c
 
 /** \internal
  * Add the data runs and extents to the file attributes.
@@ -534,7 +536,7 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
     int ibpg;
     time_t tmptime;
     char timeBuf[128];
-
+    uint64_t inode_per_ag = tsk_getu64(fs->endian, sb->sb_icount)/4;
 
     // clean up any error messages that are lying around
     tsk_error_reset();
@@ -547,6 +549,18 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
     tsk_fprintf(hFile, "Volume ID: %" PRIx64 "%" PRIx64 "\n",
         tsk_getu64(fs->endian, &sb->sb_uuid[8]), tsk_getu64(fs->endian,
             &sb->sb_uuid[0]));
+    
+    tsk_fprintf(hFile, "Features Compat: %" PRIu32 "\n",
+        tsk_getu32(fs->endian, sb->sb_features_cmpt));
+    
+    tsk_fprintf(hFile, "Features Read-Only Compat: %" PRIu32 "\n",
+        tsk_getu32(fs->endian, sb->sb_features_rocmpt));
+
+    tsk_fprintf(hFile, "Features Incompat: %" PRIu32 "\n",
+        tsk_getu32(fs->endian, sb->sb_features_incmpt));
+
+    tsk_fprintf(hFile, "CRC: %" PRIu32 "\n",
+        tsk_getu32(fs->endian, sb->sb_checksum));
 
     // /* Print journal information */
     // if (tsk_getu32(fs->endian, sb->s_feature_compat) &
@@ -574,6 +588,19 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
         fs->first_inum, fs->last_inum);
     tsk_fprintf(hFile, "Root Directory: %" PRIuINUM "\n", fs->root_inum);
 
+    tsk_fprintf(hFile, "Free Inodes: %" PRIuINUM "\n",
+        tsk_getu64(fs->endian, sb->sb_ifree));
+
+    tsk_fprintf(hFile, "Inode Size: %" PRIu16 "\n",
+        tsk_getu16(fs->endian, sb->sb_inodesize));
+
+    tsk_fprintf(hFile, "Extent Size: %" PRIu16 "\n",
+        tsk_getu16(fs->endian, sb->sb_sectsize));
+
+    tsk_fprintf(hFile, "Free Extent Count: %" PRIu64 "\n",
+        tsk_getu64(fs->endian, sb->sb_frextents));
+
+    
     tsk_fprintf(hFile, "\nCONTENT INFORMATION\n");
     tsk_fprintf(hFile, "--------------------------------------------\n");
 
@@ -587,24 +614,27 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
 
     tsk_fprintf(hFile, "Block Size: %u\n", fs->block_size);
 
-    tsk_fprintf(hFile, "Number of Free Blocks: %" PRIu32 "\n",
-        tsk_getu32(fs->endian, sb->sb_ifree));
+    tsk_fprintf(hFile, "Free Blocks: %" PRIu64 "\n",
+        tsk_getu64(fs->endian, sb->sb_fdblocks));
+
+    tsk_fprintf(hFile, "Sector Size: %" PRIu16 "\n",
+        tsk_getu16(fs->endian, sb->sb_sectsize));
 
     tsk_fprintf(hFile, "\nBLOCK GROUP INFORMATION\n");
     tsk_fprintf(hFile, "--------------------------------------------\n");
 
-    tsk_fprintf(hFile, "Number of Block Groups: %" PRIu32 "\n",
+    tsk_fprintf(hFile, "Number of Allocation Groups: %" PRIu32 "\n",
         tsk_getu32(fs->endian, sb->sb_agcount));
 
-    tsk_fprintf(hFile, "Inodes per group: %" PRIu64 "\n",
-        tsk_getu64(fs->endian,sb->sb_icount)/4);
-    tsk_fprintf(hFile, "Blocks per group: %" PRIu32 "\n",
+    tsk_fprintf(hFile, "Inodes per allocation group: %" PRIu64 "\n",
+        inode_per_ag);
+    tsk_fprintf(hFile, "Blocks per allocation group: %" PRIu32 "\n",
         tsk_getu32(fs->endian,sb->sb_agblocks));
 
     tsk_release_lock(&xfs->lock);
 
     for (i = 0; i < tsk_getu32(fs->endian,sb->sb_agcount); i++) {
-        TSK_DADDR_T cg_base;
+        uint64_t cg_base;
         TSK_INUM_T inum;
 
         /* lock access to grp_buf */
@@ -614,7 +644,7 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
         //     tsk_release_lock(&ext2fs->lock);
         //     return 1;
         // }
-        tsk_fprintf(hFile, "\nGroup: %d:\n", i);
+        tsk_fprintf(hFile, "\nAllocation Group: %d:\n", i);
         // if (ext2fs->ext4_grp_buf != NULL) {
         //     tsk_fprintf(hFile, "  Block Group Flags: [");
         //     if (EXT4BG_HAS_FLAG(fs, ext2fs->ext4_grp_buf,
@@ -629,20 +659,46 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
         //     tsk_fprintf(hFile, "\b\b]\n");
         // }
         inum =
-            fs->first_inum + tsk_gets32(fs->endian,
-            sb->sb_icount) * i;
+            fs->first_inum + inode_per_ag * i;
         tsk_fprintf(hFile, "  Inode Range: %" PRIuINUM " - ", inum);
 
-        if ((inum + tsk_gets32(fs->endian, sb->sb_icount) - 1) <
+        if ((inum + inode_per_ag - 1) <
             fs->last_inum)
             tsk_fprintf(hFile, "%" PRIuINUM "\n",
-            inum + tsk_gets32(fs->endian, sb->sb_icount) - 1);
+            inum + inode_per_ag - 1);
         else
             tsk_fprintf(hFile, "%" PRIuINUM "\n", fs->last_inum);
 
         tsk_release_lock(&xfs->lock);
-    }
 
+        cg_base = xfs_cgbase_lcl(fs, sb, i);
+        tsk_fprintf(hFile,
+            "  Block Range: %" PRIuDADDR " - %" PRIuDADDR "\n",
+            cg_base, ((xfs_cgbase_lcl(fs, sb,
+            (i+1)) -1) <
+            fs->last_block) ? (xfs_cgbase_lcl(fs, sb,
+            (i+1)) -1) : fs->last_block);
+
+        tsk_fprintf(hFile, "  Layout:\n");
+
+        tsk_fprintf(hFile,
+                "    Super Block: %" PRIuDADDR " - %" PRIuDADDR "\n",
+                cg_base,
+                cg_base +
+                ((sizeof(xfs_sb) + fs->block_size -
+                1) / fs->block_size) - 1);
+        
+        
+        uint64_t rootino = tsk_getu64(fs->endian, sb->sb_rootino);
+        uint16_t inodesize = tsk_getu16(fs->endian, sb->sb_inodesize);
+        uint32_t blocksize = tsk_getu32(fs->endian, sb->sb_blocksize);
+
+        tsk_fprintf(hFile, "    Root Inode Start Offset: 0x%x\n",
+        rootino*inodesize+cg_base*blocksize);
+
+        tsk_fprintf(hFile, "    Data Blocks: %lu - %lu\n",
+        ((rootino+inode_per_ag)*inodesize)/blocksize+cg_base, xfs_cgbase_lcl(fs, sb, (i+1))-1);
+    }
 
     return 0;
 }
