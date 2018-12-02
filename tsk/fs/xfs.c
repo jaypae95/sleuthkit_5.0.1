@@ -556,7 +556,7 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
     tsk_fprintf(hFile, "Sector Size: %" PRIu16 "\n",
         tsk_getu16(fs->endian, sb->sb_sectsize));
 
-    tsk_fprintf(hFile, "\nBLOCK GROUP INFORMATION\n");
+    tsk_fprintf(hFile, "\nALLOCATION GROUP INFORMATION\n");
     tsk_fprintf(hFile, "--------------------------------------------\n");
 
     tsk_fprintf(hFile, "Number of Allocation Groups: %" PRIu32 "\n",
@@ -576,24 +576,8 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
         /* lock access to grp_buf */
         tsk_take_lock(&xfs->lock);
 
-        // if (ext2fs_group_load(ext2fs, i)) {
-        //     tsk_release_lock(&ext2fs->lock);
-        //     return 1;
-        // }
         tsk_fprintf(hFile, "\nAllocation Group: %d:\n", i);
-        // if (ext2fs->ext4_grp_buf != NULL) {
-        //     tsk_fprintf(hFile, "  Block Group Flags: [");
-        //     if (EXT4BG_HAS_FLAG(fs, ext2fs->ext4_grp_buf,
-        //         EXT4_BG_INODE_UNINIT))
-        //         tsk_fprintf(hFile, "INODE_UNINIT, ");
-        //     if (EXT4BG_HAS_FLAG(fs, ext2fs->ext4_grp_buf,
-        //         EXT4_BG_BLOCK_UNINIT))
-        //         tsk_fprintf(hFile, "BLOCK_UNINIT, ");
-        //     if (EXT4BG_HAS_FLAG(fs, ext2fs->ext4_grp_buf,
-        //         EXT4_BG_INODE_ZEROED))
-        //         tsk_fprintf(hFile, "INODE_ZEROED, ");
-        //     tsk_fprintf(hFile, "\b\b]\n");
-        // }
+    
         inum =
             fs->first_inum + inode_per_ag * i;
         tsk_fprintf(hFile, "  Inode Range: %" PRIuINUM " - ", inum);
@@ -604,8 +588,6 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
             inum + inode_per_ag - 1);
         else
             tsk_fprintf(hFile, "%" PRIuINUM "\n", fs->last_inum);
-
-        tsk_release_lock(&xfs->lock);
 
         cg_base = xfs_cgbase_lcl(fs, sb, i);
         tsk_fprintf(hFile,
@@ -630,10 +612,13 @@ xfs_fsstat(TSK_FS_INFO * fs, FILE * hFile)
         uint32_t blocksize = tsk_getu32(fs->endian, sb->sb_blocksize);
 
         tsk_fprintf(hFile, "    Root Inode Start Offset: 0x%x\n",
-        rootino*inodesize+cg_base*blocksize);
+            rootino*inodesize+cg_base*blocksize);
 
         tsk_fprintf(hFile, "    Data Blocks: %lu - %lu\n",
-        ((rootino+inode_per_ag)*inodesize)/blocksize+cg_base, xfs_cgbase_lcl(fs, sb, (i+1))-1);
+            ((rootino+inode_per_ag)*inodesize)/blocksize+cg_base, 
+            xfs_cgbase_lcl(fs, sb, (i+1))-1);
+
+        tsk_release_lock(&xfs->lock);
     }
 
     return 0;
@@ -643,8 +628,6 @@ TSK_FS_INFO *
 xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     TSK_FS_TYPE_ENUM ftype, uint8_t test) {
         
-    printf("hello tsk I'm mingi\n");
-    printf("hi mingi im jaehoon\n");
     XFS_INFO *xfs;
     unsigned int len;
     TSK_FS_INFO *fs;
