@@ -231,7 +231,7 @@ extern "C" {
 
 typedef struct xfs_bmbt_rec_32
 {
-	uint32_t		l0, l1, l2, l3;
+	uint8_t		l0[4], l1[4], l2[4], l3[4];
 } xfs_bmbt_rec_32_t;
 
 typedef struct { uint8_t i[8]; } xfs_dir2_ino8_t;
