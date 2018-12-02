@@ -192,7 +192,10 @@ xfs_dinode_copy(XFS_INFO * xfs, TSK_FS_META * fs_meta,
     else if (dino_core_buf->di_format == 0x2) {  // extent
         // extent list
         fs_meta->inode_format = 0x2;
-        xfs_dir2_sf_t *di_bmx;
+        xfs_bmbt_rec_32_t *di_bmx;
+        addr = tsk_getu64(fs->endian, dino_core_buf->di_ino) * inodesize + sizeof(xfs_dinode_core);
+        TSK_DADDR_T *addr_ptr;
+        addr_ptr = (TSK_DADDR_T *) fs_meta->content_ptr;
         for (int i = 0; i < tsk_getu32(fs->endian, dino_core_buf->di_nextents); i++) {
             di_bmx = &(dino_buf->di_u.di_bmx[i]);
             cnt = tsk_fs_read(fs, addr, (char *) di_bmx, sizeof(xfs_bmbt_rec_32_t));
@@ -206,7 +209,38 @@ xfs_dinode_copy(XFS_INFO * xfs, TSK_FS_META * fs_meta,
                 return 1;
             }
 
+            uint64_t space[7];
+            space[0] = tsk_getu32(fs->endian, di_bmx->l0) >> 31;
+            space[1] = tsk_getu32(fs->endian, di_bmx->l0) & ((1 << 32) - 1);
+            space[3] = tsk_getu32(fs->endian, di_bmx->l1) & ((1 << 10) - 1);
+            space[4] = tsk_getu32(fs->endian, di_bmx->l2);
+            space[5] = tsk_getu32(fs->endian, di_bmx->l3) >> 21;
+            space[6] = tsk_getu32(fs->endian, di_bmx->l3) & ((1 << 21) - 1);
+            
+            uint64_t starting = (space[3] << 43) + 
+                                (space[4] << 11) +
+                                (space[5]);
 
+            addr = ((starting >> xfs->fs->sb_agblklog) & xfs->fs->sb_inopblog)
+                     * tsk_getu32(fs->endian, xfs->fs->sb_agblocks);
+            addr += (starting & ((1 << xfs->fs->sb_agblklog) - 1))
+                    * tsk_getu32(fs->endian, xfs->fs->sb_blocksize);
+            
+            addr += 0x40; // header length
+
+            uint64_t inode;
+            uint8_t namelen;
+            char* name = tsk_malloc(XFS_MAXNAMLEN);
+            uint8_t ftype;
+            uint8_t start[2];
+            
+            char* buf = tsk_malloc(tsk_getu32(fs->endian, xfs->fs->sb_blocksize));
+            cnt = tsk_fs_read(fs, addr, (char *) buf, space[6] * tsk_getu32(fs->endian, xfs->fs->sb_blocksize));
+            int idx = 0;
+            inode = &(buf[idx]);
+            
+
+            addr_ptr[i] = addr; // directory entry addrs
         }
     }
 
@@ -254,11 +288,15 @@ xfs_dinode_load(XFS_INFO * xfs, TSK_INUM_T dino_inum,
     }                                                                    /*      * Look up the group descriptor for this inode.      */
     tsk_take_lock(&xfs->lock);
 
-    uint64_t root_ino = tsk_getu64(fs->endian, xfs->fs->sb_rootino);
+    // uint64_t root_ino = tsk_getu64(fs->endian, xfs->fs->sb_rootino);
     uint16_t inodesize = tsk_getu16(fs->endian, xfs->fs->sb_inodesize);
     //addr = tsk_getu64(fs->endian, xfs->fs->sb_rootino) * tsk_getu16(fs->endian, xfs->fs->sb_inodesize);
-    addr = root_ino * inodesize;
-    
+    //addr = dino_inum * inodesize;
+
+    addr += (dino_inum >> xfs->fs->sb_inopblog) & ((1 << xfs->fs->sb_agblklog) - 1) + 
+        (dino_inum >> (xfs->fs->sb_agblklog + xfs->fs->sb_inopblog)) * (tsk_getu32(fs->endian, xfs->fs->sb_blocksize) * tsk_getu32(fs->endian, xfs->fs->sb_agblocks));
+    addr *= tsk_getu32(fs->endian, xfs->fs->sb_blocksize);
+    addr += (dino_inum & 7) * tsk_getu16(fs->endian, xfs->fs->sb_sectsize);
     cnt = tsk_fs_read(fs, addr, (char *)dino_core_buf, sizeof(xfs_dinode_core));
     if (cnt != sizeof(xfs_dinode_core)) {
         if (cnt >= 0) {
@@ -270,38 +308,6 @@ xfs_dinode_load(XFS_INFO * xfs, TSK_INUM_T dino_inum,
         return 1;
     }
     
-    switch (dino_core_buf->di_format) {
-        case 0x0:
-            //
-            break;
-        case 0x1:
-            // local inode 
-            
-            break;
-        case 0x2:
-            // extent list
-            addr = addr + sizeof(xfs_dinode_core);
-            xfs_dir2_sf_t *di_bmx;
-            for (int i = 0; i < tsk_getu32(fs->endian, dino_core_buf->di_nextents); i++) {
-                di_bmx = &(dino_buf->di_u.di_bmx[i]);
-                cnt = tsk_fs_read(fs, addr, (char *) di_bmx, sizeof(xfs_bmbt_rec_32_t));
-                if (cnt != sizeof(xfs_bmbt_rec_32_t)) {
-                    if (cnt >= 0) {
-                        tsk_error_reset();
-                        tsk_error_set_errno(TSK_ERR_FS_READ);
-                    }
-                    tsk_error_set_errstr2("xfs_dinode_load: Inode %" PRIuINUM
-                        " from %" PRIuOFF, dino_inum, addr);
-                    return 1;
-                }
-            }
-
-            break;
-        case 0x3:
-                // btree root follows
-            break;
-    }
-
     tsk_release_lock(&xfs->lock);
 
     return 0;
@@ -706,7 +712,7 @@ xfs_open(TSK_IMG_INFO * img_info, TSK_OFF_T offset,
     fs->inum_count = tsk_getu64(fs->endian, xfs->fs->sb_icount) + 1;    // we are adding 1 in this calc to account for Orphans directory
     fs->last_inum = fs->inum_count;
     fs->first_inum = XFS_FIRSTINO;
-    fs->root_inum = XFS_ROOTINO;
+    fs->root_inum = tsk_getu64(fs->endian, xfs->fs->sb_rootino);
 
     // // 이거는 inode 개수로 xfs인지 확인하는 건데 inode개수가 최소 몇개인지 모르겠다.
     // if (fs->inum_count < 10) {
